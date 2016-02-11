@@ -1,0 +1,13 @@
+<launch>
+
+    <include file="$(find vectornav)/launch/vectornav.launch" />
+
+    <node pkg="usvspeedanglecontroller" type="usvspeedanglecontroller_node" name="usvspeedanglecontroller_node" />
+
+    <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
+
+    <node pkg="sensors" type="2d_trial_2.py" name="2d_trial_2" />
+
+    <node pkg="rosserial_python" type="serial_node.py" name="serial_node" args = "/dev/ttyUSB1" />
+
+</launch>
