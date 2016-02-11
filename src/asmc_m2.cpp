@@ -102,11 +102,12 @@ int main(int argc, char *argv[])
 
   //Model pysical parameters
   float Xu = 0;
-  float Nr = 0;
+  float Nr = 3;
   float X_u_dot = -2.25;
   float Y_v_dot = -23.13;
   float N_r_dot = -2.79;
   float Xuu = 0;
+  float Nrr = 3.5;
   float m = 30;
   float Iz = 4.1;
   float B = 0.41;
@@ -169,13 +170,13 @@ int main(int argc, char *argv[])
       Xuu = -70.92;
     }
 
-    Nr = (-0.52)*pow(pow(u,2)+pow(v,2),0.5);
+    //Nr = (-0.52)*pow(pow(u,2)+pow(v,2),0.5);
 
     float g_u = (1 / (m - X_u_dot));
     float g_psi = (1 / (Iz - N_r_dot));
 
     float f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
-    float f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
+    float f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r + Nrr*abs(r)*r)) / (Iz - N_r_dot));
 
     //u_line = (0.004)*(u + u_last)/2 + u_line; //integral of the surge speed
     //u_last = u;

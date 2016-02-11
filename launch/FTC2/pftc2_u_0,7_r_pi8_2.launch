@@ -11,8 +11,8 @@
     <node name="asmc_m2" pkg="sensors" type="asmc_m2" >
 	<param name = "k_u" value = "0.1269" />
 	<param name = "k_psi" value = "0.2" />
-	<param name = "kmin_u" value = "0.01" />
-	<param name = "kmin_psi" value = "0.01" />
+	<param name = "kmin_u" value = "0.4498" />
+	<param name = "kmin_psi" value = "0.4420" />
 	<param name = "k2_u" value = "0.01" />
 	<param name = "k2_psi" value = "0.01" />
 	<param name = "mu_u" value = "0.1" />

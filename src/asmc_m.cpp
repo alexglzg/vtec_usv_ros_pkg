@@ -128,16 +128,16 @@ int main(int argc, char *argv[])
   int k2 = 8;
 
 
-  n.getParam("/asmc/k_u", k_u);
-  n.getParam("/asmc/k_psi", k_psi);
-  n.getParam("/asmc/kmin_u", kmin_u);
-  n.getParam("/asmc/kmin_psi", kmin_psi);
-  n.getParam("/asmc/k2_u", k2_u);
-  n.getParam("/asmc/k2_psi", k2_psi);
-  n.getParam("/asmc/mu_u", miu_u);
-  n.getParam("/asmc/mu_psi", miu_psi);
-  n.getParam("/asmc/lambda_u", lambda_u);
-  n.getParam("/asmc/lambda_psi", lambda_psi);
+  n.getParam("/asmc_m/k_u", k_u);
+  n.getParam("/asmc_m/k_psi", k_psi);
+  n.getParam("/asmc_m/kmin_u", kmin_u);
+  n.getParam("/asmc_m/kmin_psi", kmin_psi);
+  n.getParam("/asmc_m/k2_u", k2_u);
+  n.getParam("/asmc_m/k2_psi", k2_psi);
+  n.getParam("/asmc_m/mu_u", miu_u);
+  n.getParam("/asmc_m/mu_psi", miu_psi);
+  n.getParam("/asmc_m/lambda_u", lambda_u);
+  n.getParam("/asmc_m/lambda_psi", lambda_psi);
   n.getParam("/asmc_m/alpha", alpha);
   n.getParam("/asmc_m/L1", L1);
   
