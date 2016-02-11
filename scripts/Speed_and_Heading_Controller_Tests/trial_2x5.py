@@ -55,7 +55,7 @@ def main():
     t = Test()
     dir_name = os.path.dirname(__file__)
     profile = []
-    bag = rosbag.Bag(dir_name + '/mat/trial2x5.bag','w')
+    bag = rosbag.Bag(dir_name + '/mat/trial2x5_20.bag','w')
     trial_1 = rosbag.Bag(dir_name + '/mat/trial1.bag')
     for topic, msg, ti in trial_1.read_messages(topics=['e']):
         profile.append(msg.data*5)
@@ -66,8 +66,8 @@ def main():
     r_f = 0.0 #Filtered reference
     r_dot = 0.0
     r_dot_last = 0.0
-    a = 10.0
-    b = 10.0
+    a = 20.0
+    b = 20.0
     time_step = 0.01
     time.sleep(10)
     if t.testing:
