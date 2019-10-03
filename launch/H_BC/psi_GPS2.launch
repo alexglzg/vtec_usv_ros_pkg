@@ -1,0 +1,14 @@
+<launch>
+
+    <node pkg="sensors" type="imu" name="imu" />
+
+    <node pkg="sensors" type="heading_controller.py" name="heading_controller" />
+
+    <node pkg="sensors" type="motors.py" name="motors" />
+
+    <node pkg="sensors" type="GPSh_2p.py" name="GPSh_2p" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/Heading/GPS2_heading" />
+
+</launch>
