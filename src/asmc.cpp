@@ -1,5 +1,6 @@
 #include <iostream>
 #include "ros/ros.h"
+#include "ros/console.h"
 #include "geometry_msgs/Pose2D.h"
 #include "geometry_msgs/Vector3.h"
 #include "std_msgs/Float64.h"
@@ -19,8 +20,8 @@ float u = 0;
 float v = 0;
 float r = 0;
 
-int rate = 250;
-float integral_step = 0.004;
+int rate = 100;
+float integral_step = 0.01;
 
 //Tracking variables
 float u_d = 0;
@@ -70,6 +71,8 @@ int main(int argc, char *argv[])
   ros::Publisher left_thruster_pub = n.advertise<std_msgs::Float64>("left_thruster", 1000);
   ros::Publisher speed_gain_pub = n.advertise<std_msgs::Float64>("speed_gain", 1000);
   ros::Publisher speed_error_pub = n.advertise<std_msgs::Float64>("speed_error", 1000);
+  ros::Publisher speed_sigma_pub = n.advertise<std_msgs::Float64>("speed_sigma", 1000);
+  ros::Publisher heading_sigma_pub = n.advertise<std_msgs::Float64>("heading_sigma", 1000);
   ros::Publisher heading_gain_pub = n.advertise<std_msgs::Float64>("heading_gain", 1000);
   ros::Publisher heading_error_pub = n.advertise<std_msgs::Float64>("heading_error", 1000);
 
@@ -93,17 +96,28 @@ int main(int argc, char *argv[])
   float c = 0.78;
 
   //Controller gains
-  float k_u = 0.2;
-  float k_psi = 0.1;
-  float kmin_u = 0.01;
-  float kmin_psi = 0.01;
-  float k2_u = 0.02;
-  float k2_psi = 0.4;
-  float miu_u = 0.01;
-  float miu_psi = 0.01;
-  float lambda_u = 0.005;
-  float lambda_psi = 1;
-
+  float k_u;
+  float k_psi;
+  float kmin_u;
+  float kmin_psi;
+  float k2_u;
+  float k2_psi;
+  float miu_u;
+  float miu_psi;
+  float lambda_u;
+  float lambda_psi;
+  
+  n.getParam("/asmc/k_u", k_u);
+  n.getParam("/asmc/k_psi", k_psi);
+  n.getParam("/asmc/kmin_u", kmin_u);
+  n.getParam("/asmc/kmin_psi", kmin_psi);
+  n.getParam("/asmc/k2_u", k2_u);
+  n.getParam("/asmc/k2_psi", k2_psi);
+  n.getParam("/asmc/mu_u", miu_u);
+  n.getParam("/asmc/mu_psi", miu_psi);
+  n.getParam("/asmc/lambda_u", lambda_u);
+  n.getParam("/asmc/lambda_psi", lambda_psi);
+  
   float Tx = 0;
   float Tz = 0;
   float Ka_u = 0;
@@ -146,12 +160,12 @@ int main(int argc, char *argv[])
     if (abs(e_psi) > 3.141592){
         e_psi = (e_psi/abs(e_psi))*(abs(e_psi)-2*3.141592);
     }
-    //if (abs(e_u) < 0.05){ //tolerance of 0.05 m/s
-    //    e_u = 0;
-    //}
-    //if (abs(e_psi) < 0.01){ //tolerance of 0.01 radians
-    //    e_psi = 0;
-    //}
+    if (abs(e_u) < 0.08){ //tolerance of 0.05 m/s
+        e_u = 0;
+    }
+    if (abs(e_psi) < 0.02){ //tolerance of 0.01 radians
+        e_psi = 0;
+    }
     e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
     e_u_last = e_u;
 
@@ -258,7 +272,7 @@ int main(int argc, char *argv[])
     }
 
     
-    //cout << Ka(0) << endl;
+    //cout << k_u << endl;
     //cout << s0abs << endl;
     //cout << sign0 << endl;
     //cout << s0 << endl;
@@ -276,6 +290,9 @@ int main(int argc, char *argv[])
     std_msgs::Float64 eu;
     std_msgs::Float64 epsi;
 
+    std_msgs::Float64 su;
+    std_msgs::Float64 sp;
+
     rt.data = Tstbd;
     lt.data = Tport;
     
@@ -285,13 +302,18 @@ int main(int argc, char *argv[])
     eu.data = e_u;
     epsi.data = e_psi;
 
+    su.data = sigma_u;
+    sp.data = sigma_psi;
+
     right_thruster_pub.publish(rt);
     left_thruster_pub.publish(lt);
 
     speed_gain_pub.publish(sg);
     speed_error_pub.publish(eu);
+    speed_sigma_pub.publish(su);
     heading_gain_pub.publish(hg);
     heading_error_pub.publish(epsi);
+    heading_sigma_pub.publish(sp);
 
     ros::spinOnce();
 

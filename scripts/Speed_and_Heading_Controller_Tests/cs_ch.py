@@ -34,15 +34,13 @@ class Test:
 
 def main():
     rospy.init_node('cs_ch', anonymous=True)
+    rate = rospy.Rate(100) # 100hz
     t = Test()
-    if t.testing:
+    while not rospy.is_shutdown() and t.testing:
         start_time = rospy.Time.now().secs
-        while (rospy.Time.now().secs - start_time) <= 1:
-            t.desired(0,t.reference_heading)
-            time.sleep(0.1)
-        while (rospy.Time.now().secs - start_time) <= 45:
+        while (rospy.Time.now().secs - start_time) <= 25 and not rospy.is_shutdown():
             t.desired(0.7,t.reference_heading)
-            time.sleep(0.1)
+            rate.sleep()
         t.desired(0,t.reference_heading)
         t.testing = False
         rospy.logwarn("Finished")

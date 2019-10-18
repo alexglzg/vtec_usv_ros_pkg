@@ -67,7 +67,7 @@ class Motors:
 
 def main():
     rospy.init_node('ardumotors', anonymous=True)
-    rate = rospy.Rate(250) # 250hz
+    rate = rospy.Rate(100) # 100hz
     m = Motors()
     while not rospy.is_shutdown() and m.thrust:
         #if m.thrust:

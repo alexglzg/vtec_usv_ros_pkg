@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#Backstepping controller with speed and heading control
+#Backstepping controller with constant thrust and heading control
 
 import os
 import time
@@ -168,7 +168,7 @@ class Controller:
 
 def main():
     rospy.init_node(NODE_NAME_THIS, anonymous=False, disable_signals=False)
-    rate = rospy.Rate(250) # 250hz
+    rate = rospy.Rate(100) # 100hz
     rospy.loginfo("Test node running")
     C = Controller()
     C.start_pose

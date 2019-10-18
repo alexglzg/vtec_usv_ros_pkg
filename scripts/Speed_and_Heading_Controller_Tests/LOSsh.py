@@ -97,9 +97,9 @@ class Test:
 
 def main():
     rospy.init_node('LOSsh', anonymous=True)
-    rate = rospy.Rate(250) # 250hz
+    rate = rospy.Rate(100) # 100hz
     t = Test()
-    while not rospy.is_shutdown() and t.testing: 
+    while not rospy.is_shutdown() and t.testing:
         t.LOS(2,2,6,-15)
         rate.sleep()
     rospy.logwarn("Finished")

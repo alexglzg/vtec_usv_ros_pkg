@@ -2,7 +2,18 @@
 
     <node pkg="sensors" type="imu" name="imu" />
 
-    <node pkg="sensors" type="asmc" name="asmc" />
+    <node name="asmc" pkg="sensors" type="asmc" >
+	<param name = "k_u" value = "0.1" />
+	<param name = "k_psi" value = "0.05" />
+	<param name = "kmin_u" value = "0.05" />
+	<param name = "kmin_psi" value = "0.01" />
+	<param name = "k2_u" value = "0.02" />
+	<param name = "k2_psi" value = "0.2" />
+	<param name = "mu_u" value = "0.05" />
+	<param name = "mu_psi" value = "0.03" />
+	<param name = "lambda_u" value = "0.001" />
+	<param name = "lambda_psi" value = "1" />
+    </node>
 
     <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
 

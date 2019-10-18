@@ -80,8 +80,8 @@ class Test:
         self.LOS_pub.publish(self.LOSpath)
 
         self.vel = 0.7
-        if self.distance < 6:
-            self.vel = 0.4
+        #if self.distance < 6:
+        #    self.vel = 0.4
 
         self.desired(self.vel, self.bearing)
 
@@ -93,7 +93,7 @@ class Test:
 
 def main():
     rospy.init_node('LOS2sh', anonymous=True)
-    rate = rospy.Rate(250) # 250hz
+    rate = rospy.Rate(100) # 100hz
     t = Test()
     a = [2,2,6,-15,1,-25,6,-35]
     t.k = 1

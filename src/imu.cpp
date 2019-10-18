@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 	ins_ref.y = refposy;
 	ins_ref.theta = (3.141592 / 180)*(ref.yawPitchRoll.x);
 
-	ros::Rate loop_rate(250);
+	ros::Rate loop_rate(100);
 
   while (ros::ok())
   {
