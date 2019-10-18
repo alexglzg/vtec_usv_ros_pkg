@@ -21,6 +21,8 @@
 	<param name = "lambda_psi" value = "1" />
     </node>
 
+    <node pkg="rosserial_python" type="serial_node.py" name="serial_node" args = "/dev/ttyUSB1" />
+
     <!--Launch rosbag to record topics -->
     <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/asmc/p_1_speed_ref_heading" />
 
