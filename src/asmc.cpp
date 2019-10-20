@@ -1,6 +1,5 @@
 #include <iostream>
 #include "ros/ros.h"
-#include "ros/console.h"
 #include "geometry_msgs/Pose2D.h"
 #include "geometry_msgs/Vector3.h"
 #include "std_msgs/Float64.h"
@@ -131,7 +130,7 @@ int main(int argc, char *argv[])
   float Tx = 0;
   float Tz = 0;
   float Ka_u = 0;
-  float Ka_psi = 0.1;
+  float Ka_psi = 0;
   float Ka_dot_u = 0;
   float Ka_dot_psi = 0;
   float Ka_dot_last_u = 0;
@@ -256,6 +255,8 @@ int main(int argc, char *argv[])
     if (u_d == 0){
       Tx = 0;
       Tz = 0;
+      Ka_u = 0;
+      Ka_dot_last_u = 0;
     }
 
     Tport = (Tx / 2) + (Tz / B);
