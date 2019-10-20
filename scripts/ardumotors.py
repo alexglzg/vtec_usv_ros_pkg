@@ -7,6 +7,7 @@ import rospy
 import math
 from std_msgs.msg import Float64
 from std_msgs.msg import UInt16
+from std_msgs.msg import UInt8
 
 class Motors:
     def __init__(self):
@@ -23,6 +24,7 @@ class Motors:
 
         self.r_pwm_pub = rospy.Publisher("rpwm", UInt16, queue_size=10)
         self.l_pwm_pub = rospy.Publisher("lpwm", UInt16, queue_size=10)
+        self.flag_pub = rospy.Publisher("flag", UInt8, queue_size=10)
 
     def right_callback(self, right_t):
         self.powerR = right_t.data
@@ -41,6 +43,8 @@ class Motors:
             pwmL = powerL
             self.r_pwm_pub.publish(pwmR)
             self.l_pwm_pub.publish(pwmL)
+            flag = 1
+            self.flag_pub.publish(flag)
 
     def newtons(self, powerR=0, powerL=0):
         #validate the Newtons range
@@ -60,7 +64,6 @@ class Motors:
                 realPowerValueL = round((powerL / 36.5 * 385)+1515)
 
         self.move_thrusters(realPowerValueR,realPowerValueL)
-        #print('moving')
 
     def run(self, powerR = 0, powerL = 0):
         self.newtons(powerR, powerL)
@@ -70,7 +73,6 @@ def main():
     rate = rospy.Rate(100) # 100hz
     m = Motors()
     while not rospy.is_shutdown() and m.thrust:
-        #if m.thrust:
         m.run(m.powerR, m.powerL)
         rate.sleep()
     rospy.spin()

@@ -4,6 +4,7 @@
 #include "geometry_msgs/Pose2D.h"
 #include "geometry_msgs/Vector3.h"
 #include "std_msgs/Float64.h"
+#include "std_msgs/UInt8.h"
 #include <math.h>
 #include <Eigen/Dense>
 
@@ -22,6 +23,8 @@ float r = 0;
 
 int rate = 100;
 float integral_step = 0.01;
+
+int testing = 0;
 
 //Tracking variables
 float u_d = 0;
@@ -59,6 +62,12 @@ void vel_callback(const geometry_msgs::Vector3::ConstPtr& vel)
   r = vel->z;
 }
 
+void flag_callback(const std_msgs::UInt8::ConstPtr& flag)
+{
+  testing = flag->data;
+}
+
+
 int main(int argc, char *argv[])
 {
 
@@ -80,6 +89,7 @@ int main(int argc, char *argv[])
   ros::Subscriber desired_heading_sub = n.subscribe("desired_heading", 1000, dheading_callback);
   ros::Subscriber ins_pose_sub = n.subscribe("ins_pose", 1000, ins_callback);
   ros::Subscriber local_vel_sub = n.subscribe("local_vel", 1000, vel_callback);
+  ros::Subscriber flag_sub = n.subscribe("flag", 1000, flag_callback);
 
   ros::Rate loop_rate(rate);
 
@@ -136,7 +146,7 @@ int main(int argc, char *argv[])
 
   while (ros::ok())
   {
-      
+  if (testing == 1){    
     Xu = -25;
     Xuu = 0;
     float u_abs = abs(u);
@@ -164,12 +174,6 @@ int main(int argc, char *argv[])
     float e_psi = psi_d - theta;
     if (abs(e_psi) > 3.141592){
         e_psi = (e_psi/abs(e_psi))*(abs(e_psi)-2*3.141592);
-    }
-    if (abs(e_u) < 0.08){ //tolerance of 0.05 m/s
-        e_u = 0;
-    }
-    if (abs(e_psi) < 0.02){ //tolerance of 0.01 radians
-        e_psi = 0;
     }
     e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
     e_u_last = e_u;
@@ -283,16 +287,7 @@ int main(int argc, char *argv[])
       Tport = -30;
     }
 
-    
-    //cout << k_u << endl;
-    //cout << s0abs << endl;
-    //cout << sign0 << endl;
-    //cout << s0 << endl;
-    //cout << sign0 << endl;        
-    //cout << ua(0) << endl;
-    
-
-//Data publishing
+    //Data publishing
     std_msgs::Float64 rt;
     std_msgs::Float64 lt;
     
@@ -326,7 +321,7 @@ int main(int argc, char *argv[])
     heading_gain_pub.publish(hg);
     heading_error_pub.publish(epsi);
     heading_sigma_pub.publish(sp);
-
+  }
     ros::spinOnce();
 
     loop_rate.sleep();
