@@ -24,6 +24,7 @@ int rate = 100;
 float integral_step = 0.01;
 
 int testing = 0;
+int arduino = 0;
 
 //Tracking variables
 float u_d = 0;
@@ -66,6 +67,10 @@ void flag_callback(const std_msgs::UInt8::ConstPtr& flag)
   testing = flag->data;
 }
 
+void ardu_callback(const std_msgs::UInt8::ConstPtr& ardu)
+{
+  arduino = ardu->data;
+}
 
 int main(int argc, char *argv[])
 {
@@ -87,6 +92,7 @@ int main(int argc, char *argv[])
   ros::Subscriber ins_pose_sub = n.subscribe("ins_pose", 1000, ins_callback);
   ros::Subscriber local_vel_sub = n.subscribe("local_vel", 1000, vel_callback);
   ros::Subscriber flag_sub = n.subscribe("flag", 1000, flag_callback);
+  ros::Subscriber ardu_sub = n.subscribe("arduino", 1000, ardu_callback);
 
   ros::Rate loop_rate(rate);
 
