@@ -8,7 +8,7 @@
 
     <node pkg="sensors" type="cs_ch_4.py" name="cs_ch_4" />
 
-    <node name="asmc" pkg="sensors" type="asmc" >
+    <node name="asmc_m" pkg="sensors" type="asmc_m" >
 	<param name = "k_u" value = "0.288" />
 	<param name = "k_psi" value = "0.05" />
 	<param name = "kmin_u" value = "0.4455" />

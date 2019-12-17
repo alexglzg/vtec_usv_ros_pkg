@@ -80,8 +80,6 @@ class Test:
         rospy.logwarn("distance %f", self.distance)
 
         self.vel = 0.7
-        if self.distance < 5:
-            self.vel = 0.5
         if self.distance < 2:
             self.vel = 0
             self.bearing = self.yaw

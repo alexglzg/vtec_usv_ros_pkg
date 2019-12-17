@@ -79,7 +79,7 @@ class Test:
         self.LOSpath.y = ylos
         self.LOS_pub.publish(self.LOSpath)
 
-        self.vel = 1.4
+        self.vel = 0.7
         #if self.distance < 6:
         #    self.vel = 0.4
 

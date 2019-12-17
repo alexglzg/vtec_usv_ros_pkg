@@ -37,8 +37,8 @@ float psi_d = 0;
 //float u_d_last = 0;
 float e_u_int = 0;
 float e_u_last = 0;
-float e_psi_int = 0;
-float e_psi_last = 0;
+//float e_psi_int = 0;
+//float e_psi_last = 0;
 
 //float u_d_dot = 0; surge speed derivative, not necessary
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
   float miu_psi;
   float lambda_u;
   float lambda_psi;
-  float lambda_psi_i;
+  //float lambda_psi_i;
   
   n.getParam("/asmc/k_u", k_u);
   n.getParam("/asmc/k_psi", k_psi);
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
   n.getParam("/asmc/mu_psi", miu_psi);
   n.getParam("/asmc/lambda_u", lambda_u);
   n.getParam("/asmc/lambda_psi", lambda_psi);
-  n.getParam("/asmc/lambda_psi_i", lambda_psi_i);
+  //n.getParam("/asmc/lambda_psi_i", lambda_psi_i);
   
   float Tx = 0;
   float Tz = 0;
@@ -184,11 +184,11 @@ int main(int argc, char *argv[])
 
     float e_psi_dot = 0 - r;
 
-    e_psi_int = (integral_step)*(e_psi + e_psi_last)/2 + e_psi_int; //integral of the surge speed error
-    e_psi_last = e_psi;
+//    e_psi_int = (integral_step)*(e_psi + e_psi_last)/2 + e_psi_int; //integral of the surge speed error
+//    e_psi_last = e_psi;
 
     float sigma_u = e_u + lambda_u * e_u_int;
-    float sigma_psi = e_psi_dot + lambda_psi * e_psi + lambda_psi_i * e_psi_int;
+    float sigma_psi = e_psi_dot + lambda_psi * e_psi;// + lambda_psi_i * e_psi_int;
     
     float sigma_u_abs = abs(sigma_u);
     float sigma_psi_abs = abs(sigma_psi);
@@ -273,9 +273,9 @@ int main(int argc, char *argv[])
       Ka_psi = 0;
       Ka_dot_last_psi = 0;
       e_u_int = 0;
-      e_psi_int = 0;
+      //e_psi_int = 0;
       e_u_last = 0;
-      e_psi_last = 0;
+      //e_psi_last = 0;
     }
 
     Tport = (Tx / 2) + (Tz / B);

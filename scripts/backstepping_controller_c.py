@@ -6,6 +6,7 @@ import time
 import rospy
 import math
 from std_msgs.msg import Float64
+from std_msgs.msg import UInt8
 from geometry_msgs.msg import Pose2D
 from geometry_msgs.msg import Vector3
 
@@ -31,7 +32,7 @@ class Controller:
 #Controller gains
         self.ku = 0.5 #Speed controller speed error gain
         self.ka = 0.4 #Acceleration curve-shaping gain
-        self.udyaw = 0.4 #Max allowed speed while turning
+        self.udyaw = 0.6 #Max allowed speed while turning
         self.uamax = 0.2 #Max accleration allowed
         self.k1 = -3 #Heading controller yaw error gain
         self.k2 = 8 #Heading controller yaw rate gain
@@ -39,6 +40,10 @@ class Controller:
 #Desired surge speed and heading
         self.u_d = 0
         self.psi_d = 0
+
+#Flags
+        self.motors = 0
+        self.arduino = 0
 
 #Controller feedback variables
         self.u = 0 #surge speed
@@ -76,6 +81,10 @@ class Controller:
         rospy.Subscriber("desired_speed", Float64, self.dspeed_callback)
         rospy.Subscriber("desired_heading", Float64, self.dheading_callback)
 
+#Flags to start
+        rospy.Subscriber("flag", UInt8, self.flag_callback)
+        rospy.Subscriber("arduino", UInt8, self.ardu_callback)
+
 #IMU data subscribers
         rospy.Subscriber("local_vel", Vector3, self.local_vel_callback)
         rospy.Subscriber("ins_pose", Pose2D, self.ins_pose_callback)
@@ -84,6 +93,8 @@ class Controller:
 #Thruster data publishers
         self.right_thruster_pub = rospy.Publisher("right_thruster", Float64, queue_size=10)
         self.left_thruster_pub = rospy.Publisher("left_thruster", Float64, queue_size=10)
+        self.tx_pub = rospy.Publisher("tx", Float64, queue_size=10)
+        self.tz_pub = rospy.Publisher("tz", Float64, queue_size=10)
         self.u_error_pub = rospy.Publisher("u_error", Float64, queue_size=10)
         self.psi_error_pub = rospy.Publisher("psi_error", Float64, queue_size=10)
 
@@ -93,6 +104,12 @@ class Controller:
 
     def dheading_callback(self, d_heading):
         self.psi_d = d_heading.data
+
+    def flag_callback(self, flag):
+        self.motors = flag.data
+
+    def ardu_callback(self, ardu):
+        self.arduino = ardu.data
 
     def local_vel_callback(self, upsilon):
         self.u = upsilon.x
@@ -133,12 +150,14 @@ class Controller:
             self.X_uu = -70.92
 
         self.error_u = self.u - u_d #Speed error
-        if (math.fabs(self.error_u) < 0.05):
-            self.error_u = 0
+        speed_error = self.error_u
+        #if (math.fabs(self.error_u) < 0.05):
+            #self.error_u = 0
         #rospy.logwarn("u error %f", self.error_u)
         self.error_psi = self.psi - psi_d #Yaw error
         if (math.fabs(self.error_psi) > (math.pi)):
             self.error_psi = (self.error_psi/math.fabs(self.error_psi))*(math.fabs(self.error_psi)-2*math.pi)
+        heading_error = self.error_psi
         if (math.fabs(self.error_psi)) < 0.02:
             self.error_psi = 0
         self.degree_error = math.degrees(self.error_psi)
@@ -155,14 +174,10 @@ class Controller:
         self.epsilon_psi = (self.k1)*(self.error_psi) - (self.k2)*(self.r)
         #rospy.logwarn("epsilon psi %f", self.epsilon_psi)
 
-        #rospy.logwarn("u %f", self.u)
-        #rospy.logwarn("Xuu %f", self.X_uu)
-        #rospy.logwarn("Xu %f", self.X_u)
-        #print((self.X_uu)*(self.u)*u_abs)
         self.X_drag = (self.X_uu)*(self.u)*u_abs + (self.X_u)*(self.u)
         #rospy.logwarn("Xdrag %f", self.X_drag)
         self.T_x = (self.mass - self.X_u_dot)*(self.epsilon_u) - (self.mass - self.Y_v_dot)*(self.v)*(self.r) - (self.X_drag)
-        rospy.logwarn("Tx %f", self.T_x)
+        #rospy.logwarn("Tx %f", self.T_x)
 
         self.T_z = (self.I_z - self.N_r_dot)*(self.epsilon_psi) - (self.Y_v_dot - self.X_u_dot)*(self.u)*(self.v) - (self.N_r)*(self.r)
         if math.fabs(self.error_psi) > 0.03:
@@ -173,7 +188,11 @@ class Controller:
             self.T_z = self.T_z * .7
         if math.fabs(self.error_psi) > 0.3:
             self.T_z = self.T_z * .8
-        rospy.logwarn("Tz %f", self.T_z)
+        #rospy.logwarn("Tz %f", self.T_z)
+
+        if self.u_d == 0:
+            self.T_x = 0
+            self.T_z = 0
 
         self.T_port = (self.T_x/(2*self.c)) + (self.T_z/(self.B * self.c))
         self.T_stbd = (self.T_x/2) - (self.T_z/self.B)
@@ -186,25 +205,29 @@ class Controller:
         elif self.T_stbd < -30:
             self.T_stbd = -20
 
+
 #Controller outputs
         self.right_thruster_pub.publish(self.T_stbd)
         self.left_thruster_pub.publish(self.T_port)
+        self.tx_pub.publish(self.T_x)
+        self.tz_pub.publish(self.T_z)
 
-        self.u_error_pub.publish(self.error_u)
-        self.psi_error_pub.publish(self.degree_error)
+        self.u_error_pub.publish(speed_error)
+        self.psi_error_pub.publish(heading_error)
 
     def run(self, u_d=0, psi_d=0):
         self.control(u_d, psi_d)
 
 def main():
     rospy.init_node(NODE_NAME_THIS, anonymous=False, disable_signals=False)
-    rate = rospy.Rate(250) # 250hz
+    rate = rospy.Rate(100) # 100hz
     rospy.loginfo("Test node running")
     C = Controller()
     C.start_pose
     while not rospy.is_shutdown() and C.activated:
-        C.run(C.u_d, C.psi_d)
-        rate.sleep()
+        if C.arduino == 1 and C.motors == 1:
+            C.run(C.u_d, C.psi_d)
+            rate.sleep()
     rospy.spin()
 if __name__ == "__main__":
     try:
