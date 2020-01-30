@@ -85,7 +85,9 @@ int main(int argc, char *argv[])
   ros::Publisher speed_gain_pub = n.advertise<std_msgs::Float64>("speed_gain", 1000);
   ros::Publisher speed_error_pub = n.advertise<std_msgs::Float64>("speed_error", 1000);
   ros::Publisher speed_sigma_pub = n.advertise<std_msgs::Float64>("speed_sigma", 1000);
+  ros::Publisher heading_gain_pub = n.advertise<std_msgs::Float64>("heading_gain", 1000);
   ros::Publisher heading_error_pub = n.advertise<std_msgs::Float64>("heading_error", 1000);
+  ros::Publisher heading_sigma_pub = n.advertise<std_msgs::Float64>("heading_sigma", 1000);
 
   ros::Subscriber desired_speed_sub = n.subscribe("desired_speed", 1000, dspeed_callback);
   ros::Subscriber desired_heading_sub = n.subscribe("desired_heading", 1000, dheading_callback);
@@ -110,10 +112,15 @@ int main(int argc, char *argv[])
 
   //Controller gains
   float k_u;
+  float k_psi;
   float kmin_u;
+  float kmin_psi;
   float k2_u;
+  float k2_psi;
   float miu_u;
+  float miu_psi;
   float lambda_u;
+  float lambda_psi;
   float alpha;
   float L1;
 
@@ -121,21 +128,29 @@ int main(int argc, char *argv[])
   int k2 = 8;
 
 
-  n.getParam("/asmc_m/k_u", k_u);
-  n.getParam("/asmc_m/kmin_u", kmin_u);
-  n.getParam("/asmc_m/k2_u", k2_u);
-  n.getParam("/asmc_m/mu_u", miu_u);
-  n.getParam("/asmc_m/lambda_u", lambda_u);
+  n.getParam("/asmc/k_u", k_u);
+  n.getParam("/asmc/k_psi", k_psi);
+  n.getParam("/asmc/kmin_u", kmin_u);
+  n.getParam("/asmc/kmin_psi", kmin_psi);
+  n.getParam("/asmc/k2_u", k2_u);
+  n.getParam("/asmc/k2_psi", k2_psi);
+  n.getParam("/asmc/mu_u", miu_u);
+  n.getParam("/asmc/mu_psi", miu_psi);
+  n.getParam("/asmc/lambda_u", lambda_u);
+  n.getParam("/asmc/lambda_psi", lambda_psi);
   n.getParam("/asmc_m/alpha", alpha);
   n.getParam("/asmc_m/L1", L1);
   
   float Tx = 0;
   float Tz = 0;
   float Ka_u = 0;
+  float Ka_psi = 0;
   float Ka_dot_u = 0;
+  float Ka_dot_psi = 0;
   float Ka_dot_last_u = 0;
+  float Ka_dot_last_psi = 0;
   float ua_u = 0;
-  float epsilon_psi = 0;
+  float ua_psi = 0;
   
   while (ros::ok()){
   if (testing == 1 && arduino == 1){    
@@ -150,8 +165,10 @@ int main(int argc, char *argv[])
     Nr = (-0.52)*pow(pow(u,2)+pow(v,2),0.5);
 
     float g_u = (1 / (m - X_u_dot));
+    float g_psi = (1 / (Iz - N_r_dot));
 
     float f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
+    float f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
 
     //u_line = (0.004)*(u + u_last)/2 + u_line; //integral of the surge speed
     //u_last = u;
@@ -164,19 +181,20 @@ int main(int argc, char *argv[])
     float e_psi = theta - psi_d; //yaw error
 
     if (abs(e_psi) > 3.141592){
-        e_psi = (e_psi/abs(e_psi))*(abs(e_psi)-2*3.141592); //formula to maintain error between -pi and pi
+        e_psi = (e_psi/abs(e_psi))*(abs(e_psi)-2*3.141592);
     }
-    if (abs(e_psi) < 0.015){
-        e_psi = 0; //yaw error tolerance
-    }
-    
-
     e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
     e_u_last = e_u;
 
+    float e_psi_dot = 0 - r;
+
     float sigma_u = e_u + lambda_u * e_u_int;
+    float sigma_psi = e_psi_dot + lambda_psi * e_psi;
     
     float sigma_u_abs = abs(sigma_u);
+    float sigma_psi_abs = abs(sigma_psi);
+
+    int sign_psi_sm = 0;
 
     if (sigma_u_abs < miu_u){
 
@@ -203,7 +221,24 @@ int main(int argc, char *argv[])
       Ka_u = (1/pow(sigma_u_abs,0.5)) * (alpha/pow(2,0.5) + L1 - k2_u*sigma_u_abs);
       Ka_dot_last_u = 0;
     }
+
+    if (Ka_psi > kmin_psi){
+      float signvar = sigma_psi_abs - miu_psi;
+      if (signvar == 0){
+        sign_psi_sm = 0;
+      }
+      else {
+        sign_psi_sm = copysign(1,signvar);
+      }
+      Ka_dot_psi = k_psi * sign_psi_sm;
+    }
+    else{
+      Ka_dot_psi = kmin_psi;
+    }
     
+    Ka_psi = (integral_step)*(Ka_dot_psi + Ka_dot_last_psi)/2 + Ka_psi; //integral to get the heading adaptative gain
+    Ka_dot_last_psi = Ka_dot_psi;
+
     int sign_u = 0;
 
     if (sigma_u == 0){
@@ -214,20 +249,18 @@ int main(int argc, char *argv[])
     }
     ua_u = ((-Ka_u) * pow(sigma_u_abs,0.5) * sign_u) - (k2_u*sigma_u);
 
-    epsilon_psi = k1*e_psi - k2*r;
+    int sign_psi = 0;
+
+    if (sigma_psi == 0){
+      sign_psi = 0;
+    }
+    else {
+      sign_psi = copysign(1,sigma_psi);
+    }
+    ua_psi = ((-Ka_psi) * pow(sigma_psi_abs,0.5) * sign_psi) - (k2_psi*sigma_psi);
 
     Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
-    Tz = (Iz - N_r_dot)*epsilon_psi - (-X_u_dot + Y_v_dot)*u*v - (Nr*r); //yaw rate moment
-
-    if (abs(e_psi) > 0.02){
-        Tz = Tz * 0.5;
-    }
-    if (abs(e_psi) > 0.1){
-        Tz = Tz * 0.7;
-    }
-    if (abs(e_psi) > 0.3){
-        Tz = Tz * 0.8;
-    }
+    Tz = ((lambda_psi * e_psi_dot) - f_psi - ua_psi) / g_psi; //yaw rate moment
     
     if (Tx > 73){
       Tx = 73;
@@ -247,6 +280,12 @@ int main(int argc, char *argv[])
       Tz = 0;
       Ka_u = 0;
       Ka_dot_last_u = 0;
+      Ka_psi = 0;
+      Ka_dot_last_psi = 0;
+      e_u_int = 0;
+      //e_psi_int = 0;
+      e_u_last = 0;
+      //e_psi_last = 0;
     }
 
     Tport = (Tx / 2) + (Tz / B);
@@ -270,19 +309,25 @@ int main(int argc, char *argv[])
     std_msgs::Float64 lt;
     
     std_msgs::Float64 sg;
+    std_msgs::Float64 hg;
+
     std_msgs::Float64 eu;
     std_msgs::Float64 epsi;
+
     std_msgs::Float64 su;
+    std_msgs::Float64 sp;
 
     rt.data = Tstbd;
     lt.data = Tport;
     
     sg.data = Ka_u;
+    hg.data = Ka_psi;
 
     eu.data = e_u;
     epsi.data = e_psi;
 
     su.data = sigma_u;
+    sp.data = sigma_psi;
 
     right_thruster_pub.publish(rt);
     left_thruster_pub.publish(lt);
@@ -290,7 +335,9 @@ int main(int argc, char *argv[])
     speed_gain_pub.publish(sg);
     speed_error_pub.publish(eu);
     speed_sigma_pub.publish(su);
+    heading_gain_pub.publish(hg);
     heading_error_pub.publish(epsi);
+    heading_sigma_pub.publish(sp);
   }
     ros::spinOnce();
 
