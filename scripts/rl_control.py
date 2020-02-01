@@ -81,7 +81,7 @@ class RlControl:
         loaded = np.load(path)
         self.w1=loaded['w1']
         self.b1=loaded['b1']
-        self.w2=loaded['w2']
+        self.w2=loaded['W2']
         self.b2=loaded['b2']
         self.w3=loaded['w3']
         self.b3=loaded['b3']
@@ -93,7 +93,7 @@ class RlControl:
             x_distance = math.pow(x_desired - self.NEDx, 2)
             y_distance = math.pow(y_desired - self.NEDy, 2)
             distance = math.pow(x_distance + y_distance, 0.5)
-            if distance > 0.5:
+            if distance > 0.1:
                 self.control(x_desired,y_desired)
             else:
                 self.counter+=2
@@ -105,12 +105,13 @@ class RlControl:
         state[0] -= x_desired
         state[1] -= y_desired
         action = self.run_numpy_action_network(state)
-        self.desired_thrust(action[0,0],action[0,1])
+        self.desired_thrust(action[0],action[1])
 
     def run_numpy_action_network(self, state):
         h1 = np.tanh(np.matmul(state, self.w1) + self.b1)
-        h2 = np.tanh(np.matmul(np.concatenate([state, h1[0]]), self.w2) + self.b2)
-        action = np.matmul(np.concatenate([state, h1[0], h2[0]]), self.w3) + self.b3
+        h2 = np.tanh(np.matmul(np.concatenate([state, h1]), self.w2) + self.b2)
+        action = np.matmul(np.concatenate([state, h1, h2]), self.w3) + self.b3
+        action = np.tanh(action)*30
         return action
 
     def desired_thrust(self,T_port,T_stbd):
@@ -122,7 +123,7 @@ def main():
     rate = rospy.Rate(100) # 100hz
     rospy.loginfo("Test node running")
     rl_control = RlControl()
-    rl_control.load_weights('/home/ubuntu/catkin_ws/src/sensors/scripts/weights/'+'weights.npz')
+    rl_control.load_weights('/home/ubuntu/catkin_ws/src/sensors/scripts/weights/'+'example28000.npz')
     while not rospy.is_shutdown() and rl_control.testing:
         if rl_control.current_waypoint_array != rl_control.waypoint_array:
             rl_control.counter = 1
