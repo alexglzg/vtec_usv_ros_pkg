@@ -43,9 +43,11 @@ class RlControl:
         
         self.c = 1.27
 
-        self.counter=0
+        self.counter = 0
 
         self.testing = True
+
+	self.target_waypoint = Pose2D()
 
 #Controller outputs
         self.T_port = 0 #Thrust in Newtons
@@ -60,6 +62,7 @@ class RlControl:
 #Thruster data publishers
         self.right_thruster_pub = rospy.Publisher("right_thruster", Float64, queue_size=10)
         self.left_thruster_pub = rospy.Publisher("left_thruster", Float64, queue_size=10)
+	self.target_waypoint_pub = rospy.Publisher("target_waypoint", Pose2D, queue_size=10)
 
     def local_vel_callback(self, upsilon):
         self.u = upsilon.x
@@ -92,10 +95,15 @@ class RlControl:
         if self.counter <= len(waypoint_array):
             x_desired = waypoint_array[self.counter - 1]
             y_desired = waypoint_array[self.counter]
+            self.target_waypoint.x = x_desired
+            self.target_waypoint.y = y_desired
+            self.target_waypoint_pub.publish(self.target_waypoint)
             x_distance = math.pow(x_desired - self.NEDx, 2)
             y_distance = math.pow(y_desired - self.NEDy, 2)
             distance = math.pow(x_distance + y_distance, 0.5)
-            if distance > 0.05:
+            if self.counter == (len(waypoint_array)-1) and distance > 0.05:
+                self.control(x_desired,y_desired)
+            elif distance > 0.5:
                 self.control(x_desired,y_desired)
             else:
                 self.counter+=2
