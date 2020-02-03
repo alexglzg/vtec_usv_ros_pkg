@@ -101,7 +101,7 @@ class RlControl:
             x_distance = math.pow(x_desired - self.NEDx, 2)
             y_distance = math.pow(y_desired - self.NEDy, 2)
             distance = math.pow(x_distance + y_distance, 0.5)
-            if self.counter == (len(waypoint_array)-1) and distance > 0.05:
+            if self.counter == (len(waypoint_array)-1) and distance > 0.2:
                 self.control(x_desired,y_desired)
             elif distance > 0.5:
                 self.control(x_desired,y_desired)
@@ -121,7 +121,7 @@ class RlControl:
         h1 = np.tanh(np.matmul(state, self.w1) + self.b1)
         h2 = np.tanh(np.matmul(np.concatenate([state, h1]), self.w2) + self.b2)
         action = np.matmul(np.concatenate([state, h1, h2]), self.w3) + self.b3
-        action = np.tanh(action)*30
+        action = np.tanh(action)*20
         return action
 
     def desired_thrust(self,T_port,T_stbd):
