@@ -15,6 +15,8 @@ from std_msgs.msg import Float32MultiArray
 
 NODE_NAME_THIS = 'rl_control'
 
+model = rospy.get_param("rl_control/model")
+
 class RlControl:
 
 
@@ -93,7 +95,7 @@ class RlControl:
             x_distance = math.pow(x_desired - self.NEDx, 2)
             y_distance = math.pow(y_desired - self.NEDy, 2)
             distance = math.pow(x_distance + y_distance, 0.5)
-            if distance > 0.1:
+            if distance > 0.5:
                 self.control(x_desired,y_desired)
             else:
                 self.counter+=2
@@ -123,7 +125,7 @@ def main():
     rate = rospy.Rate(100) # 100hz
     rospy.loginfo("Test node running")
     rl_control = RlControl()
-    rl_control.load_weights('/home/ubuntu/catkin_ws/src/sensors/scripts/weights/'+'example28000.npz')
+    rl_control.load_weights('/home/ubuntu/catkin_ws/src/sensors/scripts/weights/'+ model + '.npz')
     while not rospy.is_shutdown() and rl_control.testing:
         if rl_control.current_waypoint_array != rl_control.waypoint_array:
             rl_control.counter = 1

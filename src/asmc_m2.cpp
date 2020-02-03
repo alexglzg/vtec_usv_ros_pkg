@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
     Tz = ((lambda_psi * e_r) - f_psi - ua_psi) / g_psi; //yaw rate moment
 
     
-    if (Tx > 73){
+    /*if (Tx > 73){
       Tx = 73;
     }
     else if (Tx < -60){
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
     }
     else if (Tz < -14){
       Tz = -14;
-    }
+    }*/
     
     if (u_d == 0){
       Tx = 0;
