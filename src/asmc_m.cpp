@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
     //u_d_last = u_d;
 
     float e_u = u_d - u; //speed error
-    float e_psi = theta - psi_d; //yaw error
+    float e_psi = psi_d - theta; //yaw error
 
     if (abs(e_psi) > 3.141592){
         e_psi = (e_psi/abs(e_psi))*(abs(e_psi)-2*3.141592);
