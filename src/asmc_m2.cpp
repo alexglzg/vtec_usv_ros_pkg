@@ -1,5 +1,6 @@
 #include <iostream>
 #include "ros/ros.h"
+#include "ros/console.h"
 #include "geometry_msgs/Pose2D.h"
 #include "geometry_msgs/Vector3.h"
 #include "std_msgs/Float64.h"
@@ -23,8 +24,8 @@ float r = 0;
 int rate = 100;
 float integral_step = 0.01;
 
-int testing = 0;
-int arduino = 0;
+int testing = 1;
+int arduino = 1;
 
 //Tracking variables
 float u_d = 0;
@@ -90,6 +91,7 @@ int main(int argc, char *argv[])
   ros::Publisher angular_gain_pub = n.advertise<std_msgs::Float64>("angular_gain", 1000);
   ros::Publisher angular_error_pub = n.advertise<std_msgs::Float64>("angular_error", 1000);
   ros::Publisher angular_sigma_pub = n.advertise<std_msgs::Float64>("angular_sigma", 1000);
+  ros::Publisher debug_pub = n.advertise<std_msgs::Float64>("debug", 1000);
 
   ros::Subscriber desired_speed_sub = n.subscribe("desired_speed", 1000, dspeed_callback);
   ros::Subscriber desired_angular_sub = n.subscribe("desired_angular", 1000, dangular_callback);
@@ -130,6 +132,8 @@ int main(int argc, char *argv[])
   float alpha_psi;
   float L1_psi;
 
+  std_msgs::Float64 debug;
+
   n.getParam("/asmc_m2/k_u", k_u);
   n.getParam("/asmc_m2/kmin_u", kmin_u);
   n.getParam("/asmc_m2/k2_u", k2_u);
@@ -146,6 +150,8 @@ int main(int argc, char *argv[])
   n.getParam("/asmc_m2/alpha_psi", alpha_psi);
   n.getParam("/asmc_m2/L1_psi", L1_psi);
   
+
+
   float Tx = 0;
   float Tz = 0;
   
@@ -186,13 +192,16 @@ int main(int argc, char *argv[])
     //u_d_last = u_d;
 
     float e_u = u_d - u;
-    float e_r = r_d- r;
+    float e_r = r_d - r;
+
 
     e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
     e_u_last = e_u;
     
-    e_r_int = (integral_step)*(e_r + e_r_last)/2 + e_r_int; //integral of the surge speed error
+    e_r_int = (integral_step)*(e_r + e_r_last)/2 + e_r_int; //integral of the angular speed error
     e_r_last = e_r;
+
+      
 
     float sigma_u = e_u + lambda_u * e_u_int;
     float sigma_r = e_r + lambda_psi * e_r_int;
@@ -252,6 +261,7 @@ int main(int argc, char *argv[])
     else {
       Ka_psi = (1/pow(sigma_r_abs,0.5)) * (alpha_psi/pow(2,0.5) + L1_psi - k2_psi*sigma_r_abs);
       Ka_dot_last_psi = 0;
+      debug.data = 1;
     }
  
 //Speed   
@@ -276,10 +286,12 @@ int main(int argc, char *argv[])
     }
     ua_psi = ((-Ka_psi) * pow(sigma_r_abs,0.5) * sign_psi) - (k2_psi*sigma_r);
 
-    Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
+
+    //Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
+    Tx = 0;
     Tz = ((lambda_psi * e_r) - f_psi - ua_psi) / g_psi; //yaw rate moment
 
-    
+
     /*if (Tx > 73){
       Tx = 73;
     }
@@ -354,6 +366,8 @@ int main(int argc, char *argv[])
     angular_gain_pub.publish(hg);
     angular_error_pub.publish(epsi);
     angular_sigma_pub.publish(spsi);
+
+    debug_pub.publish(debug);
   }
     ros::spinOnce();
 

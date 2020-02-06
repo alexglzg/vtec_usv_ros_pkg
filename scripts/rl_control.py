@@ -101,7 +101,7 @@ class RlControl:
             x_distance = math.pow(x_desired - self.NEDx, 2)
             y_distance = math.pow(y_desired - self.NEDy, 2)
             distance = math.pow(x_distance + y_distance, 1)
-            if self.counter == (len(waypoint_array)-1) and distance > 1:
+            if self.counter == (len(waypoint_array)-1) and distance > 0.5:
                 self.control(x_desired,y_desired)
             elif distance > 1:
                 self.control(x_desired,y_desired)
