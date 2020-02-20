@@ -8,11 +8,11 @@
 	<param name = "kmin_u" value = "0.2705" />
 	<param name = "kmin_psi" value = "0.2340" />
 	<param name = "k2_u" value = "0.01" />
-	<param name = "k2_psi" value = "0.1" />
+	<param name = "k2_psi" value = "0.01" />
 	<param name = "mu_u" value = "0.1" />
 	<param name = "mu_psi" value = "0.1" />
 	<param name = "lambda_u" value = "0.001" />
-	<param name = "lambda_psi" value = "1" />
+	<param name = "lambda_psi" value = "0.001" />
 	<param name = "alpha_u" value = "0.33" />
 	<param name = "alpha_psi" value = "0.2468" />
 	<param name = "L1_u" value = "0" />
@@ -20,6 +20,6 @@
     </node>
 
     <!--Launch rosbag to record topics-->
-    <!--node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/asmc/ftc2_test" /-->
+    <!--node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/asmc/ftc2_testlambda1" /-->
 
 </launch>

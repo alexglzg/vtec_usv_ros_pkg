@@ -104,12 +104,12 @@ int main(int argc, char *argv[])
 
   //Model pysical parameters
   float Xu = 0;
-  float Nr = 3;
+  float Nr = 0;
   float X_u_dot = -2.25;
   float Y_v_dot = -23.13;
   float N_r_dot = -2.79;
   float Xuu = 0;
-  float Nrr = 3.5;
+  //float Nrr = 3.5;
   float m = 30;
   float Iz = 4.1;
   float B = 0.41;
@@ -176,13 +176,13 @@ int main(int argc, char *argv[])
       Xuu = -70.92;
     }
 
-    //Nr = (-0.52)*pow(pow(u,2)+pow(v,2),0.5);
+    Nr = (-0.52)*pow(pow(u,2)+pow(v,2),0.5);
 
     float g_u = (1 / (m - X_u_dot));
     float g_psi = (1 / (Iz - N_r_dot));
 
     float f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
-    float f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r + Nrr*abs(r)*r)) / (Iz - N_r_dot));
+    float f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
 
     //u_line = (0.004)*(u + u_last)/2 + u_line; //integral of the surge speed
     //u_last = u;
@@ -194,14 +194,11 @@ int main(int argc, char *argv[])
     float e_u = u_d - u;
     float e_r = r_d - r;
 
-
     e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
     e_u_last = e_u;
     
     e_r_int = (integral_step)*(e_r + e_r_last)/2 + e_r_int; //integral of the angular speed error
     e_r_last = e_r;
-
-      
 
     float sigma_u = e_u + lambda_u * e_u_int;
     float sigma_r = e_r + lambda_psi * e_r_int;
@@ -257,6 +254,7 @@ int main(int argc, char *argv[])
 
       Ka_psi = (integral_step)*(Ka_dot_psi + Ka_dot_last_psi)/2 + Ka_psi; //integral to get the angular adaptative gain
       Ka_dot_last_psi = Ka_dot_psi;
+      debug.data = 2;
     }
     else {
       Ka_psi = (1/pow(sigma_r_abs,0.5)) * (alpha_psi/pow(2,0.5) + L1_psi - k2_psi*sigma_r_abs);
@@ -286,11 +284,10 @@ int main(int argc, char *argv[])
     }
     ua_psi = ((-Ka_psi) * pow(sigma_r_abs,0.5) * sign_psi) - (k2_psi*sigma_r);
 
-
-    //Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
-    Tx = 0;
+    Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
+    //Tx = 0;
     Tz = ((lambda_psi * e_r) - f_psi - ua_psi) / g_psi; //yaw rate moment
-
+    debug.data = Tz;
 
     /*if (Tx > 73){
       Tx = 73;
@@ -321,7 +318,7 @@ int main(int argc, char *argv[])
     Tport = (Tx / 2) + (Tz / B);
     Tstbd = (Tx / (2*c)) - (Tz / (B*c));
     
-    if (Tstbd > 36.5){
+    /*if (Tstbd > 36.5){
       Tstbd = 36.5;
     }
     else if (Tstbd < -30){
@@ -332,7 +329,7 @@ int main(int argc, char *argv[])
     }
     else if (Tport < -30){
       Tport = -30;
-    }
+    }*/
 
     //Data publishing
     std_msgs::Float64 rt;

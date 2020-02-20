@@ -8,7 +8,7 @@ from std_msgs.msg import Float64
 import math
 
 #Constant Speed and Constant angular
-#0.7 m/s and pi/6 rad/s
+#0.7 m/s and pi/12 rad/s
 class Test:
     def __init__(self):
         self.testing = True
@@ -43,7 +43,7 @@ def main():
             t.desired(0,0)
             rate.sleep()
         while (rospy.Time.now().secs - start_time) <= 10 and not rospy.is_shutdown():
-            t.desired(0.7,math.pi/6)
+            t.desired(0.7,math.pi/12)
             rate.sleep()
         t.desired(0,0)
         t.testing = False
