@@ -96,6 +96,8 @@ class RlControl:
         eu = u_desired - self.u
         state=np.array([self.yaw,self.u,self.v,self.r,eu,self.T_port, self.T_stbd])
         state[0] -= psi_desired
+        self.u_error_pub.publish(eu)
+        self.psi_error_pub.publish(state[0])
         self.T_port, self.T_stbd = self.run_numpy_action_network(state)
         self.desired_thrust(self.T_port, self.T_stbd)
 
