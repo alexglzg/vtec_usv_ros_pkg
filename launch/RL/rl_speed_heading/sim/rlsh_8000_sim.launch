@@ -5,10 +5,10 @@
     <node pkg="sensors" type="cs_ch_2.py" name="cs_ch_2" />
 
     <node name="rl_u_psi" pkg="sensors" type="rl_u_psi.py" >
-	<param name = "model" value = "example8000" />
+	<param name = "model" value = "exp36_example8000" />
     </node>
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/rl_u_psi/8000" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/rl_u_psi/exp36_8000" />
 
 </launch>

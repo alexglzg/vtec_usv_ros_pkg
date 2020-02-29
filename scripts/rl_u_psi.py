@@ -99,6 +99,9 @@ class RlControl:
         self.u_error_pub.publish(eu)
         self.psi_error_pub.publish(state[0])
         self.T_port, self.T_stbd = self.run_numpy_action_network(state)
+        if u_desired == 0:
+            self.T_port = 0
+            self.T_stbd = 0
         self.desired_thrust(self.T_port, self.T_stbd)
 
     def run_numpy_action_network(self, state):
