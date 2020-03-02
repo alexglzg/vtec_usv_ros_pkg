@@ -5,10 +5,10 @@
     <node pkg="sensors" type="LOS2sh.py" name="LOS2sh" />
 
     <node name="rl_u_psi" pkg="sensors" type="rl_u_psi.py" >
-	<param name = "model" value = "exp38_example15000" />
+	<param name = "model" value = "exp39_example7000" />
     </node>
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/rl_u_psi/exp38_15000_los" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/rl_u_psi/exp39_7000_los" />
 
 </launch>
