@@ -40,7 +40,7 @@ def main():
         while (rospy.Time.now().secs - start_time) <= 2 and not rospy.is_shutdown():
             t.desired(0,t.reference_heading)
             rate.sleep()
-        while (rospy.Time.now().secs - start_time) <= 30 and not rospy.is_shutdown():
+        while (rospy.Time.now().secs - start_time) <= 17 and not rospy.is_shutdown():
             t.desired(1,t.reference_heading)
             rate.sleep()
         t.desired(0,t.reference_heading)
