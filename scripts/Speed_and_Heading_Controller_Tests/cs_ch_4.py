@@ -7,7 +7,7 @@ from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float64
 
 #Constant Speed and Constant Heading
-#1.4 m/s and imu rads
+#1.5 m/s and imu rads
 class Test:
     def __init__(self):
         self.testing = True
