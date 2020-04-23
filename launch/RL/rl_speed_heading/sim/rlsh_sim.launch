@@ -2,13 +2,13 @@
 
     <node pkg="sensors" type="dynamic_model_simulate" name="dynamic_model_simulate" />
 
-    <node pkg="sensors" type="cs_vh_2.py" name="cs_vh_2" />
+    <node pkg="sensors" type="cs_ch_4.py" name="cs_ch_4" />
 
     <node name="rl_u_psi" pkg="sensors" type="rl_u_psi.py" >
-	<param name = "model" value = "exp46_example8000" />
+	<param name = "model" value = "exp50_example6000" />
     </node>
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/rl_u_psi/exp46_8000_v" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/rl_u_psi/exp50_1,4" />
 
 </launch>
