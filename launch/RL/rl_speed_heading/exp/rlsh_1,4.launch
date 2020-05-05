@@ -1,0 +1,18 @@
+<launch>
+
+    <node pkg="sensors" type="imu" name="imu" />
+
+    <node pkg="rosserial_python" type="serial_node.py" name="serial_node" args = "/dev/ttyUSB1" />
+
+    <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
+
+    <node pkg="sensors" type="cs_ch_4.py" name="cs_ch_4" />
+
+    <node name="rl_u_psi" pkg="sensors" type="rl_u_psi.py" >
+	<param name = "model" value = "exp50_example6000" />
+    </node>
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/rl_u_psi/exp50_1,4" />
+
+</launch>

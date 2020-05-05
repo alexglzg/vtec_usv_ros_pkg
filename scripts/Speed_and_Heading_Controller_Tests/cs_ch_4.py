@@ -7,7 +7,7 @@ from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float64
 
 #Constant Speed and Constant Heading
-#1.2 m/s and imu rads
+#1.4 m/s and imu rads
 class Test:
     def __init__(self):
         self.testing = True
@@ -41,7 +41,7 @@ def main():
             t.desired(0,t.reference_heading)
             rate.sleep()
         while (rospy.Time.now().secs - start_time) <= 10 and not rospy.is_shutdown():
-            t.desired(1.2,t.reference_heading)
+            t.desired(1.4,t.reference_heading)
             rate.sleep()
         t.desired(0,t.reference_heading)
         t.testing = False
