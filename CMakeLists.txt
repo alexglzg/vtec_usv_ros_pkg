@@ -13,6 +13,9 @@ rospy
 std_msgs 
 genmsg
 sensor_msgs
+tf2
+tf2_ros
+tf2_geometry_msgs
 )
 
 #Eigen libs
@@ -212,6 +215,9 @@ add_executable(asmc src/asmc.cpp)
 add_executable(asmc_m src/asmc_m.cpp)
 add_executable(asmc_m2 src/asmc_m2.cpp)
 add_executable(dynamic_model_simulate src/dynamic_model_simulate.cpp)
+add_executable(boat_tf2_broadcaster src/boat_tf2_broadcaster.cpp)
+add_executable(velodyne2boat_tf2_broadcaster src/velodyne2boat_tf2_broadcaster.cpp)
+add_executable(zed2boat_tf2_broadcaster src/zed2boat_tf2_broadcaster.cpp)
 target_link_libraries(imu ${catkin_LIBRARIES})
 target_link_libraries(imu PRIVATE libvncxx)
 target_link_libraries(imu LINK_PUBLIC pthread)
@@ -219,3 +225,6 @@ target_link_libraries(asmc ${catkin_LIBRARIES})
 target_link_libraries(asmc_m ${catkin_LIBRARIES})
 target_link_libraries(asmc_m2 ${catkin_LIBRARIES})
 target_link_libraries(dynamic_model_simulate ${catkin_LIBRARIES})
+target_link_libraries(boat_tf2_broadcaster ${catkin_LIBRARIES})
+target_link_libraries(velodyne2boat_tf2_broadcaster ${catkin_LIBRARIES})
+target_link_libraries(zed2boat_tf2_broadcaster ${catkin_LIBRARIES})

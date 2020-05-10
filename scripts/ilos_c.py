@@ -47,7 +47,7 @@ class LOS:
         self.waypoint_array = []
         self.last_waypoint_array = []
 
-        self.delta = 2
+        self.delta = 1
 
         self.k = 1
 
@@ -63,7 +63,7 @@ class LOS:
         self.ye = 0
         self.ye_last = 0
         self.ye_int = 0
-        self.sigma = 0.01
+        self.k_i = 0.1
         self.ye_int_a = 0
         self.ye_int_dot = 0
         self.ye_int_dot_last = 0
@@ -139,7 +139,7 @@ class LOS:
         ye = -(self.ned_x - x1)*math.sin(ak) + (self.ned_y - y1)*math.cos(ak)
         self.ye_int = self.time_step*(ye + self.ye_last) + self.ye_int
         self.ye_last = ye
-        self.ye_int_dot = (self.delta * ye) / (math.pow(ye + self.sigma*self.ye_int, 2) + math.pow(self.delta, 2))
+        self.ye_int_dot = (self.delta * ye) / (math.pow(ye + self.k_i*self.ye_int, 2) + math.pow(self.delta, 2))
         self.ye_int_a = self.time_step*(self.ye_int_dot+self.ye_int_dot_last) + self.ye_int_a
         self.ye_int_dot_last = self.ye_int_dot
         self.ye_last = ye
