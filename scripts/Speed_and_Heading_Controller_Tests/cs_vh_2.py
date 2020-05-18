@@ -18,10 +18,10 @@ class Test:
 
         self.reference_heading = 0
 
-        rospy.Subscriber("ref", Pose2D, self.ref_callback)
+        rospy.Subscriber("/vectornav/ins_2d/ref", Pose2D, self.ref_callback)
 
-        self.d_speed_pub = rospy.Publisher("desired_speed", Float64, queue_size=10)
-        self.d_heading_pub = rospy.Publisher("desired_heading", Float64, queue_size=10)
+        self.d_speed_pub = rospy.Publisher("/guidance/desired_speed", Float64, queue_size=10)
+        self.d_heading_pub = rospy.Publisher("/guidance/desired_heading", Float64, queue_size=10)
 
     def ref_callback(self, refh):
         self.reference_heading = refh.theta

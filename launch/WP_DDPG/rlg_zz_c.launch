@@ -1,0 +1,14 @@
+<launch>
+
+    <include file="$(find sensors)/launch/asmc.launch" />
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <node pkg="sensors" type="waypoints3.py" name="waypoints3" />
+
+    <node name="rl_guidance_c" pkg="sensors" type="rl_guidance_c.py" />
+
+    <!--Launch rosbag to record topics -->
+    <!--node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/rl_g/arc2_2/wo_speed/zz_1" /-->
+
+</launch>

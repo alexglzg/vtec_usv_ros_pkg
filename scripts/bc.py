@@ -92,8 +92,8 @@ class Controller:
 #Thruster data publishers
         self.right_thruster_pub = rospy.Publisher("/usv_control/controller/right_thruster", Float64, queue_size=10)
         self.left_thruster_pub = rospy.Publisher("/usv_control/controller/left_thruster", Float64, queue_size=10)
-        self.u_error_pub = rospy.Publisher("/usv_control/asmc/speed_error", Float64, queue_size=10)
-        self.psi_error_pub = rospy.Publisher("/usv_control/asmc/heading_error", Float64, queue_size=10)
+        self.u_error_pub = rospy.Publisher("/usv_control/controller/speed_error", Float64, queue_size=10)
+        self.psi_error_pub = rospy.Publisher("/usv_control/controller/heading_error", Float64, queue_size=10)
 
 
     def dspeed_callback(self, d_speed):

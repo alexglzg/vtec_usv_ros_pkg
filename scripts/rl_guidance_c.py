@@ -142,7 +142,6 @@ class RlGuidance:
         action = self.act(state)
         self.bearing = ak + action
         self.last_action = action
-        print(action)
 
         if (abs(self.bearing) > (math.pi)):
             self.bearing = (self.bearing/abs(self.bearing))*(abs(self.bearing) - 2*math.pi)

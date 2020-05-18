@@ -64,8 +64,8 @@ public:
     //ROS Publishers for each required sensor data
     right_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/right_thruster", 1000);
     left_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/left_thruster", 1000);
-    speed_error_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/speed_error", 1000);
-    heading_error_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/heading_error", 1000);
+    speed_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/speed_error", 1000);
+    heading_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/heading_error", 1000);
 
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &ProportionalIntegralDerivative::desiredSpeedCallback, this);
     desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, &ProportionalIntegralDerivative::desiredHeadingCallback, this);

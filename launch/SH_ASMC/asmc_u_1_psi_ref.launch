@@ -1,0 +1,18 @@
+<launch>
+
+    <node pkg="sensors" type="ins_2d" name="ins_2d" />
+
+    <node pkg="rosserial_python" type="serial_node.py" name="serial_node" args = "/dev/ttyUSB1" />
+
+    <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
+
+    <node pkg="sensors" type="cs_ch_2.py" name="cs_ch_2" />
+
+    <include file="$(find sensors)/launch/asmc.launch" />
+
+	<node pkg="sensors" type="dynamic_model_simulate" name="dynamic_model_simulate" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/asmc/1_speed_ref_heading" />
+
+</launch>
