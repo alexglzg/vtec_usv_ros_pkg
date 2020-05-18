@@ -111,6 +111,11 @@ public:
     n.param("/asmc/lambda_u", lambda_u, dlambda_u);
     n.param("/asmc/lambda_psi", lambda_psi, dlambda_psi);
 
+    u_d = 0;
+    psi_d = 0;
+    testing = 0;
+    arduino = 0;
+
   }
 
   void desiredSpeedCallback(const std_msgs::Float64::ConstPtr& _ud)

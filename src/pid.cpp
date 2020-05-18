@@ -73,8 +73,13 @@ public:
     local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, &ProportionalIntegralDerivative::velocityCallback, this);
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &ProportionalIntegralDerivative::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &ProportionalIntegralDerivative::arduinoCallback, this);
-  }
 
+    u_d = 0;
+    psi_d = 0;
+    testing = 0;
+    arduino = 0;
+
+  }
 
   void desiredSpeedCallback(const std_msgs::Float64::ConstPtr& _ud)
   {
