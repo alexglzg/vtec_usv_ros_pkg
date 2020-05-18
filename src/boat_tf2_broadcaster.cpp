@@ -13,8 +13,8 @@ public:
   nav_msgs::Path path;
   geometry_msgs::PoseStamped pose;
   TfAndPath(){
-  path_pub = node.advertise<nav_msgs::Path>("usv_path", 1000);
-  sub = node.subscribe("NED_pose", 1000, &TfAndPath::odomCallback, this);
+  path_pub = node.advertise<nav_msgs::Path>("/usv_control/broadcaster/usv_path", 1000);
+  sub = node.subscribe("/vectornav/ins_2d/NED_pose", 1000, &TfAndPath::odomCallback, this);
   }
 
   void odomCallback(const geometry_msgs::Pose2D::ConstPtr& msg){

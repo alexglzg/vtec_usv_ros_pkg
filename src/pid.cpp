@@ -5,10 +5,6 @@
 #include "std_msgs/Float64.h"
 #include "std_msgs/UInt8.h"
 #include <math.h>
-#include <eigen3/Eigen/Dense>
-
-using namespace std;
-using namespace Eigen;
 
 //Thruster outputs
 float Tstbd = 0;
@@ -31,17 +27,10 @@ float u_d = 0;
 float psi_d = 0;
 
 //Auxiliry variables
-//float u_line = 0;
-//float u_last = 0;
-//float u_d_line = 0;
-//float u_d_last = 0;
 float e_u_int = 0;
 float e_u_dot = 0;
 float e_u_last = 0;
-//float e_psi_int = 0;
-//float e_psi_last = 0;
 
-//float u_d_dot = 0; surge speed derivative, not necessary
 
 void dspeed_callback(const std_msgs::Float64::ConstPtr& ud)
 {
@@ -83,16 +72,16 @@ int main(int argc, char *argv[])
     ros::NodeHandle n;
 
   //ROS Publishers for each required sensor data
-  ros::Publisher right_thruster_pub = n.advertise<std_msgs::Float64>("right_thruster", 1000);
-  ros::Publisher left_thruster_pub = n.advertise<std_msgs::Float64>("left_thruster", 1000);
-  ros::Publisher speed_error_pub = n.advertise<std_msgs::Float64>("speed_error", 1000);
-  ros::Publisher heading_error_pub = n.advertise<std_msgs::Float64>("heading_error", 1000);
+  ros::Publisher right_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/right_thruster", 1000);
+  ros::Publisher left_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/left_thruster", 1000);
+  ros::Publisher speed_error_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/speed_error", 1000);
+  ros::Publisher heading_error_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/heading_error", 1000);
 
-  ros::Subscriber desired_speed_sub = n.subscribe("desired_speed", 1000, dspeed_callback);
-  ros::Subscriber desired_heading_sub = n.subscribe("desired_heading", 1000, dheading_callback);
-  ros::Subscriber ins_pose_sub = n.subscribe("ins_pose", 1000, ins_callback);
-  ros::Subscriber local_vel_sub = n.subscribe("local_vel", 1000, vel_callback);
-  ros::Subscriber flag_sub = n.subscribe("flag", 1000, flag_callback);
+  ros::Subscriber desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, dspeed_callback);
+  ros::Subscriber desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, dheading_callback);
+  ros::Subscriber ins_pose_sub = n.subscribe("/vectornav/ins_2d/ins_pose", 1000, ins_callback);
+  ros::Subscriber local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, vel_callback);
+  ros::Subscriber flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, flag_callback);
   ros::Subscriber ardu_sub = n.subscribe("arduino", 1000, ardu_callback);
 
   ros::Rate loop_rate(rate);
@@ -126,7 +115,7 @@ int main(int argc, char *argv[])
   if (testing == 1 && arduino == 1){
     Xu = -25;
     Xuu = 0;
-    float u_abs = abs(u);
+    float u_abs = std::abs(u);
     if (u_abs > 1.2){
       Xu = 64.55;
       Xuu = -70.92;
@@ -146,8 +135,8 @@ int main(int argc, char *argv[])
     e_u_last = e_u;
     
     float e_psi = psi_d - theta;
-    if (abs(e_psi) > 3.141592){
-        e_psi = (e_psi/abs(e_psi))*(abs(e_psi)-2*3.141592);
+    if (std::abs(e_psi) > 3.141592){
+        e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi)-2*3.141592);
     }
     float e_psi_dot = 0 - r; //derivate of the heading error
 

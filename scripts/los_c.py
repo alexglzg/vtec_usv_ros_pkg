@@ -70,8 +70,8 @@ class LOS:
         # ROS Publishers
         self.d_speed_pub = rospy.Publisher("/guidance/desired_speed", Float64, queue_size=10)
         self.d_heading_pub = rospy.Publisher("/guidance/desired_heading", Float64, queue_size=10)
-        self.target_pub = rospy.Publisher("target", Pose2D, queue_size=10)
-        self.ye_pub = rospy.Publisher("ye", Float64, queue_size=10)
+        self.target_pub = rospy.Publisher("/guidance/target", Pose2D, queue_size=10)
+        self.ye_pub = rospy.Publisher("/guidance/ye", Float64, queue_size=10)
 
     def ned_callback(self, gps):
         self.ned_x = gps.x
@@ -251,6 +251,9 @@ def main():
                     aux_waypoint_array[i], aux_waypoint_array[i+1] = los.body_to_ned(aux_waypoint_array[i],aux_waypoint_array[i+1])
                 aux_waypoint_array.insert(0,x_0)
                 aux_waypoint_array.insert(1,y_0)
+            los.waypoint_path.x = aux_waypoint_array[0]
+            los.waypoint_path.y = aux_waypoint_array[1]
+            los.target_pub.publish(los.waypoint_path)
         if len(aux_waypoint_array) > 1:
             los.los_manager(los.last_waypoint_array)
         rate.sleep()
