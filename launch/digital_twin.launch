@@ -1,0 +1,11 @@
+<launch>
+
+    <node name="boat_tf2_broadcaster" type="boat_tf2_broadcaster" pkg="sensors" />
+    <node name="waypoints2path" type="waypoints2path" pkg="sensors" />
+
+    <arg name="model" default="$(find sensors)/urdf/boat.urdf"/>
+
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+</launch>

@@ -13,10 +13,13 @@ rospy
 std_msgs 
 genmsg
 sensor_msgs
+tf2
+tf2_ros
+tf2_geometry_msgs
 )
 
 #Eigen libs
-find_package(Eigen3 REQUIRED)
+#find_package(Eigen3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -207,15 +210,21 @@ include_directories(
 # catkin_add_nosetests(test)
 
 add_subdirectory(include/cpp libvncxx)
-add_executable(imu src/imu.cpp)
+add_executable(ins_2d src/ins_2d.cpp)
 add_executable(asmc src/asmc.cpp)
-add_executable(asmc_m src/asmc_m.cpp)
-add_executable(asmc_m2 src/asmc_m2.cpp)
 add_executable(dynamic_model_simulate src/dynamic_model_simulate.cpp)
-target_link_libraries(imu ${catkin_LIBRARIES})
-target_link_libraries(imu PRIVATE libvncxx)
-target_link_libraries(imu LINK_PUBLIC pthread)
+add_executable(boat_tf2_broadcaster src/boat_tf2_broadcaster.cpp)
+add_executable(velodyne2boat_tf2_broadcaster src/velodyne2boat_tf2_broadcaster.cpp)
+add_executable(zed2boat_tf2_broadcaster src/zed2boat_tf2_broadcaster.cpp)
+add_executable(waypoints2path src/waypoints2path.cpp)
+add_executable(pid src/pid.cpp)
+target_link_libraries(ins_2d ${catkin_LIBRARIES})
+target_link_libraries(ins_2d PRIVATE libvncxx)
+target_link_libraries(ins_2d LINK_PUBLIC pthread)
 target_link_libraries(asmc ${catkin_LIBRARIES})
-target_link_libraries(asmc_m ${catkin_LIBRARIES})
-target_link_libraries(asmc_m2 ${catkin_LIBRARIES})
 target_link_libraries(dynamic_model_simulate ${catkin_LIBRARIES})
+target_link_libraries(boat_tf2_broadcaster ${catkin_LIBRARIES})
+target_link_libraries(velodyne2boat_tf2_broadcaster ${catkin_LIBRARIES})
+target_link_libraries(zed2boat_tf2_broadcaster ${catkin_LIBRARIES})
+target_link_libraries(waypoints2path ${catkin_LIBRARIES})
+target_link_libraries(pid ${catkin_LIBRARIES})
