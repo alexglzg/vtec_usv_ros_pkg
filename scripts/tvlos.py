@@ -1,21 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
-----------------------------------------------------------
-    @file: los.py
-    @date: Nov 2019
-    @date_modif: Sat Mar 21, 2020
-    @author: Alejandro Gonzalez
-    @e-mail: alexglzg97@gmail.com
-    @co-author: Sebastian Martinez Perez
-    @e-mail: sebas.martp@gmail.com
-    @brief: Implementation of line-of-sight (LOS) algorithm with inputs on
-      NED, geodetic and body reference frames
-    Open source
-----------------------------------------------------------
-'''
-
 import math
 import os
 import time
@@ -29,8 +14,6 @@ from std_msgs.msg import Float32MultiArray, Float64
 class LOS:
     def __init__(self):
         self.active = True
-
-        self.time_step = 0.01
 
         self.desired_speed = 0
         self.desired_heading = 0
@@ -47,7 +30,9 @@ class LOS:
         self.waypoint_array = []
         self.last_waypoint_array = []
 
-        self.delta = 1
+        self.delta_max = 5
+        self.delta_min = 0.5
+        self.gamma = 0.5
 
         self.k = 1
 
@@ -61,12 +46,6 @@ class LOS:
 
         self.waypoint_path = Pose2D()
         self.ye = 0
-        self.ye_last = 0
-        self.ye_int = 0
-        self.k_i = 0.1
-        self.ye_int_a = 0
-        self.ye_int_dot = 0
-        self.ye_int_dot_last = 0
 
         self.waypoint_mode = 0 # 0 for NED, 1 for GPS, 2 for body
          
@@ -137,12 +116,6 @@ class LOS:
         '''
         ak = math.atan2(y2 - y1, x2 - x1)
         ye = -(self.ned_x - x1)*math.sin(ak) + (self.ned_y - y1)*math.cos(ak)
-        self.ye_int = self.time_step*(ye + self.ye_last) + self.ye_int
-        self.ye_last = ye
-        self.ye_int_dot = (self.delta * ye) / (math.pow(ye + self.k_i*self.ye_int, 2) + math.pow(self.delta, 2))
-        self.ye_int_a = self.time_step*(self.ye_int_dot+self.ye_int_dot_last) + self.ye_int_a
-        self.ye_int_dot_last = self.ye_int_dot
-        self.ye_last = ye
         xe = (self.ned_x - x1)*math.cos(ak) + (self.ned_y - y1)*math.sin(ak)
         x_total = (x2 - x1)*math.cos(ak) + (y2 - y1)*math.sin(ak)
         if xe > x_total: #Means the USV went farther than x2. 2 Alternatives:
@@ -155,14 +128,15 @@ class LOS:
             '''#This one changes the target to the next in line
             self.k += 1'''
 
-        psi_r = math.atan(-(ye + self.k_i*self.ye_int_a)/self.delta)
+        delta = (self.delta_max - self.delta_min)*math.exp(-(1/self.gamma)*abs(ye)) + self.delta_min
+        psi_r = math.atan(-ye/delta)
         self.bearing = ak + psi_r
 
         if (abs(self.bearing) > (math.pi)):
             self.bearing = (self.bearing/abs(self.bearing))*(abs(self.bearing) - 2*math.pi)
 
-        x_los = x1 + (self.delta+xe)*math.cos(ak)
-        y_los = y1 + (self.delta+xe)*math.sin(ak)
+        x_los = x1 + (delta+xe)*math.cos(ak)
+        y_los = y1 + (delta+xe)*math.sin(ak)
         self.ye = ye
         self.ye_pub.publish(self.ye)
 
@@ -171,10 +145,10 @@ class LOS:
         if (abs_e_psi > (math.pi)):
             e_psi = (e_psi/abs_e_psi)*(abs_e_psi - 2*math.pi)
             abs_e_psi = abs(e_psi)
-        #u_psi = 1/(1 + math.exp(self.exp_gain*(abs_e_psi*self.chi_psi - self.exp_offset)))
-        #u_r = 1/(1 + math.exp(-self.exp_gain*(self.distance*self.chi_r - self.exp_offset)))
+        u_psi = 1/(1 + math.exp(self.exp_gain*(abs_e_psi*self.chi_psi - self.exp_offset)))
+        u_r = 1#1/(1 + math.exp(-self.exp_gain*(self.distance*self.chi_r - self.exp_offset)))
 
-        self.vel = self.u_max
+        self.vel = (self.u_max - self.u_min)*np.min([u_psi, u_r]) + self.u_min
 
         self.desired(self.vel, self.bearing)
 
@@ -237,11 +211,9 @@ class LOS:
 
 def main():
 
-    rospy.init_node('ilos_c', anonymous=False)
-    frequency = 20.
-    rate = rospy.Rate(frequency) # 20hz
+    rospy.init_node('tvlos', anonymous=False)
+    rate = rospy.Rate(20) # 20hz
     los = LOS()
-    los.time_step = 1./frequency
     los.last_waypoint_array = []
     aux_waypoint_array = []
 
@@ -260,13 +232,13 @@ def main():
             elif los.waypoint_mode == 1:
                 for i in range(0, len(aux_waypoint_array), 2):
                     aux_waypoint_array[i], aux_waypoint_array[i+1] = los.gps_to_ned(aux_waypoint_array[i],aux_waypoint_array[i+1])
-                #aux_waypoint_array.insert(0,x_0)
-                #aux_waypoint_array.insert(1,y_0)
+                aux_waypoint_array.insert(0,x_0)
+                aux_waypoint_array.insert(1,y_0)
             elif los.waypoint_mode == 2:
                 for i in range(0, len(aux_waypoint_array), 2):
                     aux_waypoint_array[i], aux_waypoint_array[i+1] = los.body_to_ned(aux_waypoint_array[i],aux_waypoint_array[i+1])
-                #aux_waypoint_array.insert(0,x_0)
-                #aux_waypoint_array.insert(1,y_0)
+                aux_waypoint_array.insert(0,x_0)
+                aux_waypoint_array.insert(1,y_0)
             los.waypoint_path.x = aux_waypoint_array[0]
             los.waypoint_path.y = aux_waypoint_array[1]
             los.target_pub.publish(los.waypoint_path)

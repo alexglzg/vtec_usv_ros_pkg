@@ -2,7 +2,6 @@
 
 import os
 import time
-#import serial
 import rospy
 import math
 from std_msgs.msg import Float64
@@ -11,69 +10,89 @@ from std_msgs.msg import UInt8
 
 class Motors:
     def __init__(self):
-        self.thrust = True
+        self.active = True
 
-        self.maxPowerValue = 1900
-        self.minPowerValue = 1100
+        self.max_pwm = 1900
+        self.min_pwm = 1100
+        self.stop_pwm = 1500
 
-        self.powerR = 0 
-        self.powerL = 0 
+        self.max_thrust = 36.5
+        self.min_thrust = -30
 
-        rospy.Subscriber("right_thruster", Float64, self.right_callback)
-        rospy.Subscriber("left_thruster", Float64, self.left_callback)
+        self.thrust_pwm_conversion = 385
+        self.initial_forward_thrust = 1515
+        self.initial_reverse_thrust = 1485
+
+        self.power_right = 0 
+        self.power_left = 0 
+
+        rospy.Subscriber("/usv_control/controller/right_thruster", Float64, self.right_callback)
+        rospy.Subscriber("/usv_control/controller/left_thruster", Float64, self.left_callback)
 
         self.r_pwm_pub = rospy.Publisher("rpwm", UInt16, queue_size=10)
         self.l_pwm_pub = rospy.Publisher("lpwm", UInt16, queue_size=10)
-        self.flag_pub = rospy.Publisher("flag", UInt8, queue_size=10)
+        self.flag_pub = rospy.Publisher("/arduino_br/ardumotors/flag", UInt8, queue_size=10)
 
     def right_callback(self, right_t):
-        self.powerR = right_t.data
-        #rospy.logwarn(self.powerR)
+        self.power_right = right_t.data
+        #rospy.logwarn(self.power_right)
 
     def left_callback(self, left_t):
-        self.powerL = left_t.data
-        #rospy.logwarn(self.powerL)
+        self.power_left = left_t.data
+        #rospy.logwarn(self.power_left)
 
-    def move_thrusters(self,powerR=1500, powerL=1500):
-        #validate the pwm range
-        if powerR < 1100 or powerR > 1900 or powerL < 1100 or powerL > 1900:
+    def send_pwm(self, power_right, power_left):
+        '''
+        @name: send_pwm
+        @brief: PWM signal topic publishing for rosserial arduino, and flag for asmc to start.
+        @param: power_right: PWM value of the right thruster
+                power_left: PWM value of the left thruster
+        @return: --
+        '''
+        if power_right < self.min_pwm or power_right > self.max_pwm or power_left < self.min_pwm or power_left > self.max_pwm:
             rospy.logwarn("Thruster power must be between 1100 - 1900")
         else:
-            pwmR = powerR
-            pwmL = powerL
-            self.r_pwm_pub.publish(pwmR)
-            self.l_pwm_pub.publish(pwmL)
+            pwm_right = power_right
+            pwm_left = power_left
+            self.r_pwm_pub.publish(pwm_right)
+            self.l_pwm_pub.publish(pwm_left)
             flag = 1
             self.flag_pub.publish(flag)
 
-    def newtons(self, powerR=0, powerL=0):
-        #validate the Newtons range
-        if (powerR < -30 or powerR > 36.5 or powerL < -30 or powerL > 36.5):
+    def newtons_to_pwm(self, power_right=0, power_left=0):
+        '''
+        @name: newtons_to_pwm
+        @brief: Conversion of thrust value from Newtons to PWM.
+        @param: power_right: Newtons value of the right thruster
+                power_left: Newtons value of the left thruster
+        @return: --
+        '''
+        if (power_right < self.min_thrust or power_right > self.max_thrust or power_left < self.min_thrust or power_left > self.max_thrust):
             rospy.logwarn("Saturation range")
-            realPowerValueR = powerR * 0.5
-            realPowerValueL =  powerL * 0.5
+            pwm_right = power_right * 0.5
+            pwm_left =  power_left * 0.5
 
         else:
-            if (powerR >= 0):
-                realPowerValueR = round((powerR / 36.5 * 385)+1515)
-            elif (powerR < 0):
-                realPowerValueR = round((powerR / 30 * 385)+1485)
-            if (powerL <= 0):
-                realPowerValueL = round((powerL / 30 * 385)+1485)
-            elif(powerL > 0):
-                realPowerValueL = round((powerL / 36.5 * 385)+1515)
+            if (power_right >= 0):
+                pwm_right = round((power_right / self.max_thrust * self.thrust_pwm_conversion)+self.initial_forward_thrust)
+            elif (power_right < 0):
+                pwm_right = round((power_right / (-self.min_thrust) * self.thrust_pwm_conversion)+self.initial_reverse_thrust)
+            if (power_left <= 0):
+                pwm_left = round((power_left / (-self.min_thrust) * self.thrust_pwm_conversion)+self.initial_reverse_thrust)
+            elif(power_left > 0):
+                pwm_left = round((power_left / self.max_thrust * self.thrust_pwm_conversion)+self.initial_forward_thrust)
 
-        self.move_thrusters(realPowerValueR,realPowerValueL)
+        self.send_pwm(pwm_right, pwm_left)
 
-    def run(self, powerR = 0, powerL = 0):
-        self.newtons(powerR, powerL)
+    def run(self, power_right = 0, power_left = 0):
+        self.newtons_to_pwm(power_right, power_left)
 
 def main():
-    rospy.init_node('ardumotors', anonymous=True)
+    rospy.init_node('ardumotors', anonymous=False)
     rate = rospy.Rate(100) # 100hz
-    m = Motors()
-    while not rospy.is_shutdown() and m.thrust:
-        m.run(m.powerR, m.powerL)
+    motors = Motors()
+    while not rospy.is_shutdown() and motors.active:
+        motors.run(motors.power_right, motors.power_left)
         rate.sleep()
     rospy.spin()
 

@@ -1,55 +1,48 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-'''
-----------------------------------------------------------
-    @file: los.py
-    @date: Nov 2019
-    @date_modif: Sat Mar 21, 2020
-    @author: Alejandro Gonzalez
-    @e-mail: alexglzg97@gmail.com
-    @co-author: Sebastian Martinez Perez
-    @e-mail: sebas.martp@gmail.com
-    @brief: Implementation of line-of-sight (LOS) algorithm with inputs on
-      NED, geodetic and body reference frames
-    Open source
-----------------------------------------------------------
-'''
-
-import math
-import os
-import time
 
 import numpy as np
+from tensorflow.compat.v1.keras.models import Sequential, Model
+from tensorflow.compat.v1.keras.layers import Dense, Dropout, Input
+from tensorflow.compat.v1.keras.layers import Add, Concatenate
+
+import os
+import time
+import math
+
 import rospy
-from geometry_msgs.msg import Pose2D, Vector3
-from std_msgs.msg import Float32MultiArray, Float64
 
-# Class definition
-class LOS:
+from std_msgs.msg import Float64
+from geometry_msgs.msg import Pose2D
+from geometry_msgs.msg import Vector3
+from std_msgs.msg import Float32MultiArray
+
+NODE_NAME_THIS = 'rl_guidance_c'
+
+class RlGuidance:
+
+
     def __init__(self):
-        self.active = True
 
-        self.time_step = 0.01
-
-        self.desired_speed = 0
-        self.desired_heading = 0
-        self.distance = 0
-        self.bearing = 0
+        self.testing = True
 
         self.ned_x = 0
         self.ned_y = 0
         self.yaw = 0
+
+        self.u = 0 #surge speed
+        self.v = 0 #sway speed
+        self.r = 0 #yaw rate
+
+        self.desired_heading = 0
+        self.desired_speed = 0
+        self.distance = 0
+        self.bearing = 0
 
         self.reference_latitude = 0
         self.reference_longitude = 0
 
         self.waypoint_array = []
         self.last_waypoint_array = []
-
-        self.delta = 1
-
-        self.k = 1
 
         self.u_max = 1
         self.u_min = 0.3
@@ -59,29 +52,35 @@ class LOS:
         self.exp_gain = 10
         self.exp_offset = 0.5
 
+        self.k = 0
+
         self.waypoint_path = Pose2D()
         self.ye = 0
-        self.ye_last = 0
-        self.ye_int = 0
-        self.k_i = 0.1
-        self.ye_int_a = 0
-        self.ye_int_dot = 0
-        self.ye_int_dot_last = 0
 
         self.waypoint_mode = 0 # 0 for NED, 1 for GPS, 2 for body
-         
-        # ROS Subscribers
-        rospy.Subscriber("/vectornav/ins_2d/NED_pose", Pose2D, self.ned_callback)
-        rospy.Subscriber("/vectornav/ins_2d/ins_ref", Pose2D, self.gpsref_callback)
-        rospy.Subscriber("/mission/waypoints", Float32MultiArray, self.waypoints_callback)
 
-        # ROS Publishers
-        self.d_speed_pub = rospy.Publisher("/guidance/desired_speed", Float64, queue_size=10)
-        self.d_heading_pub = rospy.Publisher("/guidance/desired_heading", Float64, queue_size=10)
+        self.actor_model = self.create_actor_model()
+        self.last_action = 0.
+        self.vel = 0.
+
+#IMU data subscribers
+        rospy.Subscriber("/vectornav/ins_2d/local_vel", Vector3, self.local_vel_callback)
+        rospy.Subscriber("/vectornav/ins_2d/NED_pose", Pose2D, self.gps_callback)
+        rospy.Subscriber("/mission/waypoints", Float32MultiArray, self.waypoints_callback)
+        rospy.Subscriber("/vectornav/ins_2d/ins_ref", Pose2D, self.gpsref_callback)
+
+#Thruster data publishers
+        self.desired_speed_pub = rospy.Publisher("/guidance/desired_speed", Float64, queue_size=10)
+        self.desired_heading_pub = rospy.Publisher("/guidance/desired_heading", Float64, queue_size=10)
         self.target_pub = rospy.Publisher("/guidance/target", Pose2D, queue_size=10)
         self.ye_pub = rospy.Publisher("/guidance/ye", Float64, queue_size=10)
 
-    def ned_callback(self, gps):
+    def local_vel_callback(self, upsilon):
+        self.u = upsilon.x
+        self.v = upsilon.y
+        self.r = upsilon.z
+
+    def gps_callback(self, gps):
         self.ned_x = gps.x
         self.ned_y = gps.y
         self.yaw = gps.theta
@@ -99,13 +98,8 @@ class LOS:
         self.waypoint_mode = msg.data[-1] # 0 for NED, 1 for GPS, 2 for body
         self.waypoint_array = waypoints
 
-    def los_manager(self, listvar):
-        '''
-        @name: los_manager
-        @brief: Waypoint manager to execute the LOS algorithm.
-        @param: listvar: list of variable waypoints
-        @return: --
-        '''
+
+    def guidance_manager(self, listvar):
         if self.k < len(listvar)/2:
             x1 = listvar[2*self.k - 2]
             y1 = listvar[2*self.k - 1]
@@ -119,30 +113,15 @@ class LOS:
             self.distance = math.pow(x_squared + y_squared, 0.5)
 
             if self.distance > 1:
-                self.los(x1, y1, x2, y2)
+                self.guidance_law(x1, y1, x2, y2)
             else:
                 self.k += 1
         else:
             self.desired(0, self.yaw)
 
-    def los(self, x1, y1, x2, y2):
-        '''
-        @name: los
-        @brief: Implementation of the LOS algorithm.
-        @param: x1: x coordinate of the path starting-waypoint
-                y1: y coordinate of the path starting-waypoint
-                x2: x coordinate of the path ending-waypoint
-                y2: y coordinate of the path ending-waypoint
-        @return: --
-        '''
+    def guidance_law(self, x1, y1, x2, y2):
         ak = math.atan2(y2 - y1, x2 - x1)
         ye = -(self.ned_x - x1)*math.sin(ak) + (self.ned_y - y1)*math.cos(ak)
-        self.ye_int = self.time_step*(ye + self.ye_last) + self.ye_int
-        self.ye_last = ye
-        self.ye_int_dot = (self.delta * ye) / (math.pow(ye + self.k_i*self.ye_int, 2) + math.pow(self.delta, 2))
-        self.ye_int_a = self.time_step*(self.ye_int_dot+self.ye_int_dot_last) + self.ye_int_a
-        self.ye_int_dot_last = self.ye_int_dot
-        self.ye_last = ye
         xe = (self.ned_x - x1)*math.cos(ak) + (self.ned_y - y1)*math.sin(ak)
         x_total = (x2 - x1)*math.cos(ak) + (y2 - y1)*math.sin(ak)
         if xe > x_total: #Means the USV went farther than x2. 2 Alternatives:
@@ -155,14 +134,18 @@ class LOS:
             '''#This one changes the target to the next in line
             self.k += 1'''
 
-        psi_r = math.atan(-(ye + self.k_i*self.ye_int_a)/self.delta)
-        self.bearing = ak + psi_r
+        psi_ak = self.yaw - ak
+        psi_ak = np.where(np.greater(np.abs(psi_ak), np.pi), np.sign(psi_ak)*(np.abs(psi_ak)-2*np.pi), psi_ak)
+        u_ak, v_ak = self.body_to_path(self.u, self.v, psi_ak)
+
+        state = np.array([self.u, v_ak, self.r, ye, psi_ak, self.last_action])
+        action = self.act(state)
+        self.bearing = ak + action
+        self.last_action = action
 
         if (abs(self.bearing) > (math.pi)):
             self.bearing = (self.bearing/abs(self.bearing))*(abs(self.bearing) - 2*math.pi)
 
-        x_los = x1 + (self.delta+xe)*math.cos(ak)
-        y_los = y1 + (self.delta+xe)*math.sin(ak)
         self.ye = ye
         self.ye_pub.publish(self.ye)
 
@@ -172,11 +155,26 @@ class LOS:
             e_psi = (e_psi/abs_e_psi)*(abs_e_psi - 2*math.pi)
             abs_e_psi = abs(e_psi)
         #u_psi = 1/(1 + math.exp(self.exp_gain*(abs_e_psi*self.chi_psi - self.exp_offset)))
-        #u_r = 1/(1 + math.exp(-self.exp_gain*(self.distance*self.chi_r - self.exp_offset)))
+        #u_r = 1#1/(1 + math.exp(-self.exp_gain*(self.distance*self.chi_r - self.exp_offset)))
 
         self.vel = self.u_max
 
         self.desired(self.vel, self.bearing)
+
+    def act(self,state):
+        state = state.reshape((1, 6))
+        action = self.actor_model.predict(state)*np.pi/2
+
+        return action[0][0]
+
+    def create_actor_model(self):
+        state_input = Input(shape=6)
+        h1 = Dense(400, activation='relu')(state_input)
+        h2 = Dense(300, activation='relu')(h1)
+        output = Dense(1, activation='tanh')(h2)
+        model = Model(inputs=state_input, outputs=output)
+
+        return model
 
     def gps_to_ned(self, latitude_2, longitude_2):
         '''
@@ -228,52 +226,77 @@ class LOS:
         ned_y2 = n[1] + self.ned_y
         return (ned_x2, ned_y2)
 
+    def body_to_path(self, x2, y2, alpha):
+        '''
+        @name: body_to_path
+        @brief: Coordinate transformation between body and path reference frames.
+        @param: x2: target x coordinate in body reference frame
+                y2: target y coordinate in body reference frame
+        @return: path_x2: target x coordinate in path reference frame
+                 path_y2: target y coordinate in path reference frame
+        '''
+        p = np.array([x2, y2])
+        J = self.rotation_matrix(alpha)
+        n = J.dot(p)
+        path_x2 = n[0]
+        path_y2 = n[1]
+        return (path_x2, path_y2)
+
+    def rotation_matrix(self, angle):
+        '''
+        @name: rotation_matrix
+        @brief: Transformation matrix template.
+        @param: angle: angle of rotation
+        @return: J: transformation matrix
+        '''
+        J = np.array([[np.math.cos(angle), -1*np.math.sin(angle)],
+                      [np.math.sin(angle), np.math.cos(angle)]])
+        return (J)
+
     def desired(self, _speed, _heading):
         self.desired_heading = _heading
         self.desired_speed = _speed
-        self.d_heading_pub.publish(self.desired_heading)
-        self.d_speed_pub.publish(self.desired_speed)
-
+        self.desired_heading_pub.publish(self.desired_heading)
+        self.desired_speed_pub.publish(self.desired_speed)
 
 def main():
-
-    rospy.init_node('ilos_c', anonymous=False)
-    frequency = 20.
+    rospy.init_node(NODE_NAME_THIS, anonymous=False)
+    frequency = 20
     rate = rospy.Rate(frequency) # 20hz
-    los = LOS()
-    los.time_step = 1./frequency
-    los.last_waypoint_array = []
+    rospy.loginfo("Test node running")
+    rl_guidance = RlGuidance()
+    rl_guidance.actor_model.load_weights('/home/alex/Documents/rasp_ws/src/sensors/scripts/weights/guidance/arc2_2')
+    rl_guidance.last_waypoint_array = []
     aux_waypoint_array = []
-
-    while (not rospy.is_shutdown()) and los.active:
-        if los.last_waypoint_array != los.waypoint_array:
-            los.k = 1
-            los.last_waypoint_array = los.waypoint_array
-            aux_waypoint_array = los.last_waypoint_array
-            x_0 = los.ned_x
-            y_0 = los.ned_y
+    while not rospy.is_shutdown() and rl_guidance.testing:
+        if rl_guidance.last_waypoint_array != rl_guidance.waypoint_array:
+            rl_guidance.k = 1
+            rl_guidance.last_waypoint_array = rl_guidance.waypoint_array
+            aux_waypoint_array = rl_guidance.last_waypoint_array
+            x_0 = rl_guidance.ned_x
+            y_0 = rl_guidance.ned_y
             
-            if los.waypoint_mode == 0:
+            if rl_guidance.waypoint_mode == 0:
+                #aux_waypoint_array.insert(0,x_0)
+                #aux_waypoint_array.insert(1,y_0)
                 pass
-                #aux_waypoint_array.insert(0,x_0)
-                #aux_waypoint_array.insert(1,y_0)
-            elif los.waypoint_mode == 1:
+            elif rl_guidance.waypoint_mode == 1:
                 for i in range(0, len(aux_waypoint_array), 2):
-                    aux_waypoint_array[i], aux_waypoint_array[i+1] = los.gps_to_ned(aux_waypoint_array[i],aux_waypoint_array[i+1])
-                #aux_waypoint_array.insert(0,x_0)
-                #aux_waypoint_array.insert(1,y_0)
-            elif los.waypoint_mode == 2:
+                    aux_waypoint_array[i], aux_waypoint_array[i+1] = rl_guidance.gps_to_ned(aux_waypoint_array[i],aux_waypoint_array[i+1])
+                aux_waypoint_array.insert(0,x_0)
+                aux_waypoint_array.insert(1,y_0)
+            elif rl_guidance.waypoint_mode == 2:
                 for i in range(0, len(aux_waypoint_array), 2):
-                    aux_waypoint_array[i], aux_waypoint_array[i+1] = los.body_to_ned(aux_waypoint_array[i],aux_waypoint_array[i+1])
-                #aux_waypoint_array.insert(0,x_0)
-                #aux_waypoint_array.insert(1,y_0)
-            los.waypoint_path.x = aux_waypoint_array[0]
-            los.waypoint_path.y = aux_waypoint_array[1]
-            los.target_pub.publish(los.waypoint_path)
+                    aux_waypoint_array[i], aux_waypoint_array[i+1] = rl_guidance.body_to_ned(aux_waypoint_array[i],aux_waypoint_array[i+1])
+                aux_waypoint_array.insert(0,x_0)
+                aux_waypoint_array.insert(1,y_0)
+            rl_guidance.waypoint_path.x = aux_waypoint_array[0]
+            rl_guidance.waypoint_path.y = aux_waypoint_array[1]
+            rl_guidance.target_pub.publish(rl_guidance.waypoint_path)
         if len(aux_waypoint_array) > 1:
-            los.los_manager(los.last_waypoint_array)
+            rl_guidance.guidance_manager(rl_guidance.last_waypoint_array)
         rate.sleep()
-    los.desired(0, los.yaw)
+    rl_guidance.desired(0, rl_guidance.yaw)
     rospy.logwarn('Finished')
     rospy.spin()
 
