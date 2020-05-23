@@ -1,4 +1,19 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+'''
+----------------------------------------------------------
+    @file: ilos.py
+    @date: Mar 2020
+    @date_modif: Fri May 22, 2020
+    @author: Alejandro Gonzalez
+    @e-mail: alexglzg97@gmail.com
+    @brief: Implementation of deep deterministic policy
+      gradient (DDPG) as guidance law with inputs as NED
+      geodetic and body reference frames
+    Open source
+----------------------------------------------------------
+'''
 
 import numpy as np
 from tensorflow.compat.v1.keras.models import Sequential, Model
@@ -16,7 +31,9 @@ from geometry_msgs.msg import Pose2D
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Float32MultiArray
 
-NODE_NAME_THIS = 'rl_guidance'
+NODE_NAME_THIS = 'ddpg_guidance'
+speed_equation = rospy.get_param("ddpg_guidance/speed_equation", 1)
+model = rospy.get_param("ddpg_guidance/model", "arc2_2")
 
 class RlGuidance:
 
@@ -44,6 +61,7 @@ class RlGuidance:
         self.waypoint_array = []
         self.last_waypoint_array = []
 
+        self.speed_equation = 1
         self.u_max = 1
         self.u_min = 0.3
         self.threshold_radius = 5
@@ -149,15 +167,19 @@ class RlGuidance:
         self.ye = ye
         self.ye_pub.publish(self.ye)
 
-        e_psi = self.bearing - self.yaw
-        abs_e_psi = abs(e_psi)
-        if (abs_e_psi > (math.pi)):
-            e_psi = (e_psi/abs_e_psi)*(abs_e_psi - 2*math.pi)
+        if self.speed_equation == 1:
+            e_psi = self.bearing - self.yaw
             abs_e_psi = abs(e_psi)
-        u_psi = 1/(1 + math.exp(self.exp_gain*(abs_e_psi*self.chi_psi - self.exp_offset)))
-        u_r = 1#1/(1 + math.exp(-self.exp_gain*(self.distance*self.chi_r - self.exp_offset)))
+            if (abs_e_psi > (math.pi)):
+                e_psi = (e_psi/abs_e_psi)*(abs_e_psi - 2*math.pi)
+                abs_e_psi = abs(e_psi)
+            u_psi = 1/(1 + math.exp(self.exp_gain*(abs_e_psi*self.chi_psi - self.exp_offset)))
+            u_r = 1#1/(1 + math.exp(-self.exp_gain*(self.distance*self.chi_r - self.exp_offset)))
 
-        self.vel = (self.u_max - self.u_min)*np.min([u_psi, u_r]) + self.u_min
+            self.vel = (self.u_max - self.u_min)*np.min([u_psi, u_r]) + self.u_min
+        
+        else:
+            self.vel = self.u_max
 
         self.desired(self.vel, self.bearing)
 
@@ -265,8 +287,10 @@ def main():
     rate = rospy.Rate(frequency) # 20hz
     rospy.loginfo("Test node running")
     rl_guidance = RlGuidance()
-    rl_guidance.actor_model.load_weights('/home/alex/Documents/rasp_ws/src/sensors/scripts/weights/guidance/arc2_2')
+    dir_name = os.path.dirname(__file__)
+    rl_guidance.actor_model.load_weights(dir_name + '/weights/guidance/' + model)
     rl_guidance.last_waypoint_array = []
+    rl_guidance.speed_equation = speed_equation
     aux_waypoint_array = []
     while not rospy.is_shutdown() and rl_guidance.testing:
         if rl_guidance.last_waypoint_array != rl_guidance.waypoint_array:

@@ -1,0 +1,16 @@
+<launch>
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <node pkg="sensors" type="bc.py" name="bc" />
+
+    <node pkg="sensors" type="waypoints3.py" name="waypoints3" />
+
+    <node name="tvlos" pkg="sensors" type="tvlos.py" >
+	<param name = "speed_equation" value = "0" />
+    </node>
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/bc/u_1_psi_tvlos" />
+
+</launch>

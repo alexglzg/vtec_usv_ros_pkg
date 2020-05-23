@@ -1,0 +1,12 @@
+<launch>
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <node pkg="sensors" type="bc.py" name="bc" />
+
+    <node pkg="sensors" type="cs_vh_2.py" name="cs_vh_2" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/bc/u_0,7_psi_0,4v" />
+
+</launch>
