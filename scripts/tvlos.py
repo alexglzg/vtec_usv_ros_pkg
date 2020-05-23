@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+'''
+----------------------------------------------------------
+    @file: tvlos.py
+    @date: Nov 2019
+    @date_modif: Fri May 22, 2020
+    @author: Alejandro Gonzalez
+    @e-mail: alexglzg97@gmail.com
+    @brief: Implementation of line-of-sight (LOS) algorithm with inputs on
+      NED, geodetic and body reference frames and using time-varying
+      look-ahead distance
+    Open source
+----------------------------------------------------------
+'''
 import math
 import os
 import time

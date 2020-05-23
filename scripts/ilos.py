@@ -3,14 +3,12 @@
 
 '''
 ----------------------------------------------------------
-    @file: los.py
+    @file: ilos.py
     @date: Nov 2019
-    @date_modif: Sat Mar 21, 2020
+    @date_modif: Fri May 22, 2020
     @author: Alejandro Gonzalez
     @e-mail: alexglzg97@gmail.com
-    @co-author: Sebastian Martinez Perez
-    @e-mail: sebas.martp@gmail.com
-    @brief: Implementation of line-of-sight (LOS) algorithm with inputs on
+    @brief: Implementation of integral line-of-sight (ILOS) algorithm with inputs on
       NED, geodetic and body reference frames
     Open source
 ----------------------------------------------------------

@@ -127,7 +127,8 @@ def main():
     rate = rospy.Rate(100) # 100hz
     rospy.loginfo("Test node running")
     rl_control = RlControl()
-    rl_control.load_weights('/home/ubuntu/catkin_ws/src/sensors/scripts/weights/speed_heading/'+ model + '.npz')
+    dir_name = os.path.dirname(__file__)
+    rl_control.load_weights(dir_name + '/weights/speed_heading/'+ model + '.npz')
     while not rospy.is_shutdown() and rl_control.testing:
         rl_control.control(rl_control.u_d, rl_control.psi_d)
         rate.sleep()
