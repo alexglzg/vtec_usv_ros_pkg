@@ -1,14 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import math
-import os
+'''
+----------------------------------------------------------
+    @file: tvlos.py
+    @date: Nov 2019
+    @date_modif: Fri May 22, 2020
+    @author: Alejandro Gonzalez
+    @e-mail: alexglzg97@gmail.com
+    @brief: Implementation of line-of-sight (LOS) algorithm with inputs on
+      NED, geodetic and body reference frames and using time-varying
+      look-ahead distance
+    Open source
+----------------------------------------------------------
+'''
 import time
 
 import numpy as np
 import rospy
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Float32MultiArray, Float64
+
+speed_equation = rospy.get_param("tvlos/speed_equation", 1)
 
 # Class definition
 class LOS:
@@ -36,6 +49,7 @@ class LOS:
 
         self.k = 1
 
+        self.speed_equation = 1
         self.u_max = 1
         self.u_min = 0.3
         self.threshold_radius = 5
@@ -140,15 +154,19 @@ class LOS:
         self.ye = ye
         self.ye_pub.publish(self.ye)
 
-        e_psi = self.bearing - self.yaw
-        abs_e_psi = abs(e_psi)
-        if (abs_e_psi > (math.pi)):
-            e_psi = (e_psi/abs_e_psi)*(abs_e_psi - 2*math.pi)
+        if self.speed_equation == 1:
+            e_psi = self.bearing - self.yaw
             abs_e_psi = abs(e_psi)
-        u_psi = 1/(1 + math.exp(self.exp_gain*(abs_e_psi*self.chi_psi - self.exp_offset)))
-        u_r = 1#1/(1 + math.exp(-self.exp_gain*(self.distance*self.chi_r - self.exp_offset)))
+            if (abs_e_psi > (math.pi)):
+                e_psi = (e_psi/abs_e_psi)*(abs_e_psi - 2*math.pi)
+                abs_e_psi = abs(e_psi)
+            u_psi = 1/(1 + math.exp(self.exp_gain*(abs_e_psi*self.chi_psi - self.exp_offset)))
+            u_r = 1#1/(1 + math.exp(-self.exp_gain*(self.distance*self.chi_r - self.exp_offset)))
 
-        self.vel = (self.u_max - self.u_min)*np.min([u_psi, u_r]) + self.u_min
+            self.vel = (self.u_max - self.u_min)*np.min([u_psi, u_r]) + self.u_min
+        
+        else:
+            self.vel = self.u_max
 
         self.desired(self.vel, self.bearing)
 
@@ -215,6 +233,7 @@ def main():
     rate = rospy.Rate(20) # 20hz
     los = LOS()
     los.last_waypoint_array = []
+    los.speed_equation = speed_equation
     aux_waypoint_array = []
 
     while (not rospy.is_shutdown()) and los.active:

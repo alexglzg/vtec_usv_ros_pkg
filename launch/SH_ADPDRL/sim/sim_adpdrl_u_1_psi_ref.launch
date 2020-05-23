@@ -1,6 +1,6 @@
 <launch>
 
-    <node pkg="sensors" type="dynamic_model_simulate" name="dynamic_model_simulate" />
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
 
     <node pkg="sensors" type="cs_ch_2.py" name="cs_ch_2" />
 
@@ -9,6 +9,6 @@
     </node>
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/rl_u_psi/exp50_1,4" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/adpdrl/u_1_psi_ref" />
 
 </launch>
