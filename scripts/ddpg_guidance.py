@@ -33,7 +33,7 @@ from std_msgs.msg import Float32MultiArray
 
 NODE_NAME_THIS = 'ddpg_guidance'
 speed_equation = rospy.get_param("ddpg_guidance/speed_equation", 1)
-model = rospy.get_param("ddpg_guidance/model", "arc2_2")
+model = rospy.get_param("ddpg_guidance/model", "ddpg_asmc")
 
 class RlGuidance:
 
