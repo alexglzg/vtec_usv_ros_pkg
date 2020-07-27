@@ -136,7 +136,7 @@ public:
       e_u_int = (time_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
       e_u_dot = (e_u - e_u_last) / time_step; //derivate of the surge speed error
       e_u_last = e_u;
-      
+
       float e_psi = psi_d - theta;
       if (std::abs(e_psi) > 3.141592){
           e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi)-2*3.141592);

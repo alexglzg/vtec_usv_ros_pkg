@@ -158,7 +158,7 @@ public:
 		etheta = eta(2);
 		if (abs(etheta) > 3.141592){
 			etheta = (etheta/abs(etheta))*(abs(etheta)-2*3.141592);
-		}
+			}
 		dm_pose.x = x;
 		dm_pose.y = y;
 		dm_pose.theta = etheta;

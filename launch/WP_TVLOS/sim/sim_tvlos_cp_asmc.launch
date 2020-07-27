@@ -1,0 +1,18 @@
+<launch>
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <node pkg="sensors" type="curved_waypoints_3.py" name="curved_waypoints_3" />
+
+    <node name="waypoints2path" type="waypoints2path" pkg="sensors" />
+
+    <node name="tvlos_cp" pkg="sensors" type="tvlos_cp.py" >
+	<param name = "speed_equation" value = "0" />
+    </node>
+
+    <include file="$(find sensors)/launch/asmc.launch" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/tvlos/wo_speed/curved" />
+
+</launch>

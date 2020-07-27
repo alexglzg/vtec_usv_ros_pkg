@@ -10,7 +10,7 @@ public:
   geometry_msgs::PoseStamped pose;
   Waypoint2Path(){
   path_pub = node.advertise<nav_msgs::Path>("waypoint_path", 1000);
-  sub = node.subscribe("waypoint", 1000, &Waypoint2Path::odomCallback, this);
+  sub = node.subscribe("/guidance/target", 1000, &Waypoint2Path::odomCallback, this);
   }
 
   void odomCallback(const geometry_msgs::Pose2D::ConstPtr& msg){
