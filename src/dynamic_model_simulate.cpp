@@ -18,6 +18,8 @@ public:
 	float integral_step;
 	float Tstbd;
 	float Tport;
+
+	//Hydrodynamic parameters
 	float Xu;
 	float Yv;
 	float Yr;
@@ -37,10 +39,12 @@ public:
 	static const float Nvr = -8.8;
 	static const float Nrv = -8.8;
 	static const float Nrr = -3.49;
-	static const float m = 30;
-	static const float Iz = 4.1;
-	static const float B = 0.41;
-	static const float c = 0.78;
+
+	//Intrinsic parameters
+	static const float m = 30; //mass
+	static const float Iz = 4.1; //moment of inertia
+	static const float B = 0.41; //centerline-to-centerline separation
+	static const float c = 0.78; //thruster correction factor
 
 	tf2::Quaternion myQuaternion;
 
@@ -67,8 +71,8 @@ public:
 	float v;
 	float r;
 
-	geometry_msgs::Pose2D dm_pose; //inertial navigation system pose (latitude, longitude, yaw)
-	geometry_msgs::Vector3 dm_vel;
+	geometry_msgs::Pose2D dm_pose; //inertial navigation system pose [North East Yaw] or [x y psi]
+	geometry_msgs::Vector3 dm_vel; //velocity vector [u v r]
 	nav_msgs::Odometry odom;
 
 	DynamicModel()
@@ -89,6 +93,7 @@ public:
 		eta << 0, 0, 0;
 		eta_dot_last << 0, 0, 0;
 
+		//constant matrix M
 		M << m - X_u_dot, 0, 0,
 			0, m - Y_v_dot, 0 - Y_r_dot,
 			0, 0 - N_v_dot, Iz - N_r_dot;
@@ -97,16 +102,17 @@ public:
 
 	void right_callback(const std_msgs::Float64::ConstPtr& right)
 	{
-		Tstbd = right->data;
+		Tstbd = right->data; //right thruster input in Newtons
 	}
 
 	void left_callback(const std_msgs::Float64::ConstPtr& left)
 	{
-		Tport = left->data;
+		Tport = left->data; //left thruster input in Newtons
 	}
 
 	void time_step()
 	{
+		//Hydrodynamic equations and parameter conditions
 		Xu = -25;
 		Xuu = 0;
 		if (abs(upsilon(0)) > 1.2){
@@ -119,43 +125,52 @@ public:
 		Nv = 0.06*(-3.141592*1000)*sqrt(pow(upsilon(0),2)+pow(upsilon(1),2))*0.09*0.09*1.01;
 		Nr = 0.02*(-3.141592*1000)*sqrt(pow(upsilon(0),2)+pow(upsilon(1),2))*0.09*0.09*1.01*1.01;
 		
+		//Vector tau of torques
 		T << Tport + c*Tstbd, 0, 0.5*B*(Tport - c*Tstbd);
 
+		//Coriolis matrix - rigid body
 		CRB << 0, 0, 0 - m * upsilon(1),
 			0, 0, m * upsilon(0),
 			m * upsilon(1), 0 - m * upsilon(0), 0;
 
+		//Coriolis matrix - added mass
 		CA << 0, 0, 2 * ((Y_v_dot*upsilon(1)) + ((Y_r_dot + N_v_dot)/2) * upsilon(2)),
 			0, 0, 0 - X_u_dot * m * upsilon(0),
 			2*(((0 - Y_v_dot) * upsilon(1)) - ((Y_r_dot+N_v_dot)/2) * upsilon(2)), X_u_dot * m * upsilon(0), 0;
 
+		//Coriolis matrix
 		C = CRB + CA;
 
+		//Drag matrix - linear
 		Dl << 0-Xu, 0, 0,
 			0, 0-Yv, 0-Yr,
 			0, 0-Nv, 0-Nr;
 
+		//Drag matrix - nonlinear
 		Dn << Xuu * abs(upsilon(0)), 0, 0,
 			0, Yvv * abs(upsilon(1)) + Yvr * abs(upsilon(2)), Yrv * abs(upsilon(1)) + Yrr * abs(upsilon(2)),
 			0, Nvv * abs(upsilon(1)) + Nvr * abs(upsilon(2)), Nrv * abs(upsilon(1)) + Nrr * abs(upsilon(2));
 
+		//Drag matrix
 		D = Dl - Dn;
 
-		upsilon_dot =  M.inverse()*(T - C * upsilon - D * upsilon);
-		upsilon = integral_step * (upsilon_dot + upsilon_dot_last)/2 + upsilon; //integral
+		upsilon_dot =  M.inverse()*(T - C * upsilon - D * upsilon); //acceleration vector [u' v' r']
+		upsilon = integral_step * (upsilon_dot + upsilon_dot_last)/2 + upsilon; //integral [u v r]
 		upsilon_dot_last = upsilon_dot;
 
+		//Transformation matrix
 		J << cos(eta(2)), -sin(eta(2)), 0,
 			sin(eta(2)), cos(eta(2)), 0,
 			0, 0, 1;
 
-		eta_dot = J*upsilon; //transformation into local reference frame
-		eta = integral_step*(eta_dot+eta_dot_last)/2 + eta; //integral
+		eta_dot = J*upsilon; //transformation into local reference frame [x' y' psi']
+		eta = integral_step*(eta_dot+eta_dot_last)/2 + eta; //integral [x y psi]
 		eta_dot_last = eta_dot;
 
 		x = eta(0); //position in x
 		y = eta(1); //position in y
-		etheta = eta(2);
+		etheta = eta(2); //orientatio psi
+		//Wrap to [-pi pi]
 		if (abs(etheta) > 3.141592){
 			etheta = (etheta/abs(etheta))*(abs(etheta)-2*3.141592);
 			}

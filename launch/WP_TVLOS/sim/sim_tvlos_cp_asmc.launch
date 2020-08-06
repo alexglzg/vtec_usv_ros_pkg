@@ -13,6 +13,6 @@
     <include file="$(find sensors)/launch/asmc.launch" />
 
     <!--Launch rosbag to record topics -->
-    <!--node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/tvlos/wo_speed/curved" /-->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/tvlos/wo_speed/curved" />
 
 </launch>
