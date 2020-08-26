@@ -40,11 +40,11 @@ public:
   static const float c = 0.78;
 
   //Controller gains
-  static const float kp_u = 1.1;
-  static const float kd_u = 0.1;
-  static const float ki_u = 0.2;
-  static const float kp_psi = 0.8;
-  static const float kd_psi = 3;
+  static const float kp_u = 80.0;
+  static const float kd_u = 40.0;
+  static const float ki_u = 50.0;
+  static const float kp_psi = 45.0;
+  static const float kd_psi = 45.0;
     
   float Tx;
   float Tz;
