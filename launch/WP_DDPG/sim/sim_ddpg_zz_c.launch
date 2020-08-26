@@ -11,6 +11,6 @@
     <include file="$(find sensors)/launch/asmc.launch" />
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/ddpg/wo_speed/zz" />
+    <!--node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/alex/Documents/rasp_ws/src/sensors/bags/ddpg/wo_speed/zz" /-->
 
 </launch>
