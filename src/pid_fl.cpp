@@ -36,15 +36,23 @@ public:
   float e_u_last;
 
   //Model pysical parameters
+  float Xu;
+  float Nr;
+  static const float X_u_dot = -2.25;
+  static const float Y_v_dot = -23.13;
+  static const float N_r_dot = -2.79;
+  float Xuu;
+  static const float m = 30;
+  static const float Iz = 4.1;
   static const float B = 0.41;
   static const float c = 0.78;
 
   //Controller gains
-  static const float kp_u = 80.0;
-  static const float kd_u = 40.0;
-  static const float ki_u = 50.0;
-  static const float kp_psi = 45.0;
-  static const float kd_psi = 45.0;
+  static const float kp_u = 1.1;
+  static const float kd_u = 0.1;
+  static const float ki_u = 0.2;
+  static const float kp_psi = 0.8;
+  static const float kd_psi = 3;
     
   float Tx;
   float Tz;
@@ -108,6 +116,21 @@ public:
   void control()
   {
     if (testing == 1 && arduino == 1){
+      Xu = -25;
+      Xuu = 0;
+      float u_abs = std::abs(u);
+      if (u_abs > 1.2){
+        Xu = 64.55;
+        Xuu = -70.92;
+      }
+
+      Nr = (-0.52)*pow(pow(u,2)+pow(v,2),0.5);
+
+      float g_u = (1 / (m - X_u_dot));
+      float g_psi = (1 / (Iz - N_r_dot));
+
+      float f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
+      float f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
 
       float e_u = u_d - u;
       e_u_int = (time_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
@@ -123,8 +146,8 @@ public:
       ua_u = (kp_u * e_u) + (ki_u * e_u_int) + (kd_u * e_u_dot);
       ua_psi = (kp_psi * e_psi) + (kd_psi * e_psi_dot);
     
-      Tx = ua_u; //surge force
-      Tz = ua_psi; //yaw rate moment
+      Tx = (-f_u + ua_u) / g_u; //surge force
+      Tz = (-f_psi + ua_psi) / g_psi; //yaw rate moment
       
       if (Tx > 73){
         Tx = 73;
@@ -205,7 +228,7 @@ private:
 //Main
 int main(int argc, char *argv[])
 {
-  ros::init(argc, argv, "pid");
+  ros::init(argc, argv, "pid_fl");
   ProportionalIntegralDerivative proportionalIntegralDerivative;
   int rate = 100;
   ros::Rate loop_rate(rate);
