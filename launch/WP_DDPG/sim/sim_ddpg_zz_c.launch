@@ -2,7 +2,7 @@
 
     <include file="$(find sensors)/launch/usv_simulation.launch" />
 
-   <node pkg="sensors" type="waypoints.py" name="waypoints" />
+   <node pkg="sensors" type="waypoints3.py" name="waypoints3" />
 
     <node name="ddpg_guidance" pkg="sensors" type="ddpg_guidance.py" >
 	<param name = "speed_equation" value = "0" />
