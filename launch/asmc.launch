@@ -12,7 +12,7 @@
 	<param name = "k2_psi" value = "0.4" />
 	<param name = "mu_u" value = "0.05" />
 	<!--param name = "mu_psi" value = "0.1" /-->
-	<param name = "mu_psi" value = "0.02" />
+	<param name = "mu_psi" value = "0.05" />
 	<param name = "lambda_u" value = "0.001" />
 	<param name = "lambda_psi" value = "1" />
     </node>
