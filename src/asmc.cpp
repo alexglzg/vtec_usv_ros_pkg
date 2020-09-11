@@ -33,6 +33,7 @@ public:
   //Auxiliry variables
   float e_u_int;
   float e_u_last;
+  float psi_d_last;
 
   //Model pysical parameters
   float Xu;
@@ -113,6 +114,7 @@ public:
 
     u_d = 0;
     psi_d = 0;
+    psi_d_last = 0;
     testing = 0;
     arduino = 0;
 
@@ -177,7 +179,11 @@ public:
       e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
       e_u_last = e_u;
 
-      float e_psi_dot = 0 - r;
+      float r_d = (psi_d - psi_d_last) / integral_step;
+      psi_d_last = psi_d;
+
+      float e_psi_dot = r_d - r;
+      //float e_psi_dot = 0 - r;
 
       float sigma_u = e_u + lambda_u * e_u_int;
       float sigma_psi = e_psi_dot + lambda_psi * e_psi;
