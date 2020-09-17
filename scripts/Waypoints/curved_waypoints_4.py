@@ -29,7 +29,7 @@ def main():
     path = []
     r = 4
     d = r*2
-    step = np.pi/100
+    step = np.pi/200
     x_0 = 4
     y_0 = 0
     x_offset = x_0

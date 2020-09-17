@@ -81,6 +81,7 @@ public:
     heading_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/heading_sigma", 1000);
     heading_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/heading_gain", 1000);
     heading_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/heading_error", 1000);
+    control_input_pub = n.advertise<geometry_msgs::Pose2D>("/usv_control/controller/control_input", 1000);
     
     //ROS Subscribers
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &AdaptiveSlidingModeControl::desiredSpeedCallback, this);
@@ -181,12 +182,12 @@ public:
 
       float r_d = (psi_d - psi_d_last) / integral_step;
       psi_d_last = psi_d;
-
-      float e_psi_dot = r_d - r;
-      //float e_psi_dot = 0 - r;
+      
+      //float e_psi_dot = r_d - r;
+      float e_psi_dot = 0 - r;
 
       float sigma_u = e_u + lambda_u * e_u_int;
-      float sigma_psi = e_psi_dot + lambda_psi * e_psi;
+      float sigma_psi = 0.1 * e_psi_dot + lambda_psi * e_psi;
       
       float sigma_u_abs = std::abs(sigma_u);
       float sigma_psi_abs = std::abs(sigma_psi);
@@ -303,6 +304,8 @@ public:
       std_msgs::Float64 su;
       std_msgs::Float64 sp;
 
+      geometry_msgs::Pose2D ctrl_input;
+
       rt.data = starboard_t;
       lt.data = port_t;
       
@@ -315,6 +318,9 @@ public:
       su.data = sigma_u;
       sp.data = sigma_psi;
 
+      ctrl_input.x = Tx;
+      ctrl_input.theta = Tz;
+
       right_thruster_pub.publish(rt);
       left_thruster_pub.publish(lt);
 
@@ -324,6 +330,7 @@ public:
       heading_gain_pub.publish(hg);
       heading_error_pub.publish(epsi);
       heading_sigma_pub.publish(sp);
+      control_input_pub.publish(ctrl_input);
     }
   }
 
@@ -338,6 +345,7 @@ private:
   ros::Publisher heading_sigma_pub;
   ros::Publisher heading_gain_pub;
   ros::Publisher heading_error_pub;
+  ros::Publisher control_input_pub;
 
   ros::Subscriber desired_speed_sub;
   ros::Subscriber desired_heading_sub;
