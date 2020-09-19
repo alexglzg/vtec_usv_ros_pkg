@@ -52,7 +52,7 @@ class LOS:
         self.k = 1
 
         self.speed_equation = 1
-        self.u_max = 0.7
+        self.u_max = 0.5
         self.u_min = 0.3
         self.threshold_radius = 5
         self.chi_r = 1./self.threshold_radius
@@ -131,6 +131,7 @@ class LOS:
         else:
             self.desired(0, self.yaw)
             self.k = 2
+            rospy.logwarn('Finished')
 
     def los(self, x1, y1, x2, y2):
         '''
@@ -257,7 +258,6 @@ def main():
             los.los_manager(los.last_waypoint_array)
         rate.sleep()
     los.desired(0, los.yaw)
-    rospy.logwarn('Finished')
     rospy.spin()
 
 if __name__ == "__main__":
