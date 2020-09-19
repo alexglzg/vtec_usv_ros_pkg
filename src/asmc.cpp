@@ -58,6 +58,16 @@ public:
   float ua_u;
   float ua_psi;
 
+  float o_dot_dot;
+  float o_dot;
+  float o;
+  float o_last;
+  float o_dot_last;
+  float o_dot_dot_last;
+  static const float f1 = 2;
+  static const float f2 = 2;
+  static const float f3 = 2;
+
   //Controller gains
   float k_u;
   float k_psi;
@@ -182,12 +192,20 @@ public:
 
       float r_d = (psi_d - psi_d_last) / integral_step;
       psi_d_last = psi_d;
+      o_dot_dot = (((r_d - o_last) * f1) - (f3 * o_dot_last)) * f2;
+      o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
+      o = (integral_step)*(o_dot + o_dot_last)/2 + o;
+      r_d = o;
+      o_last = o;
+      o_dot_last = o_dot;
+      o_dot_dot_last = o_dot_dot;
       
-      //float e_psi_dot = r_d - r;
-      float e_psi_dot = 0 - r;
+      float e_psi_dot = r_d - r;
+      //float e_psi_dot = 0 - r;
 
       float sigma_u = e_u + lambda_u * e_u_int;
-      float sigma_psi = 0.1 * e_psi_dot + lambda_psi * e_psi;
+      float sigma_psi = e_psi_dot + lambda_psi * e_psi;
+      //float sigma_psi = 0.1 * e_psi_dot + lambda_psi * e_psi;
       
       float sigma_u_abs = std::abs(sigma_u);
       float sigma_psi_abs = std::abs(sigma_psi);
@@ -250,6 +268,7 @@ public:
 
       Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
       Tz = ((lambda_psi * e_psi_dot) - f_psi - ua_psi) / g_psi; //yaw rate moment
+      //Tz = (- f_psi + (((lambda_psi * e_psi_dot) - ua_psi) / 0.1)) / (g_psi); //yaw rate moment
       
       if (Tx > 73){
         Tx = 73;
@@ -273,6 +292,12 @@ public:
         Ka_dot_last_psi = 0;
         e_u_int = 0;
         e_u_last = 0;
+        o_dot_dot = 0;
+        o_dot = 0;
+        o = 0;
+        o_last = 0;
+        o_dot_last = 0;
+        o_dot_dot_last = 0;
       }
 
       port_t = (Tx / 2) + (Tz / B);

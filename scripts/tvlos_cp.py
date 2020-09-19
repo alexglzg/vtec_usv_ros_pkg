@@ -45,14 +45,14 @@ class LOS:
         self.waypoint_array = []
         self.last_waypoint_array = []
 
-        self.delta_max = 0.5#1#5
+        self.delta_max = 0.8#1#5
         self.delta_min = 0.2#0.5
         self.gamma = 2#1/3
 
         self.k = 1
 
         self.speed_equation = 1
-        self.u_max = 0.8
+        self.u_max = 0.5
         self.u_min = 0.3
         self.threshold_radius = 5
         self.chi_r = 1./self.threshold_radius
@@ -223,7 +223,7 @@ class LOS:
 def main():
 
     rospy.init_node('tvlos_cp', anonymous=False)
-    rate = rospy.Rate(10) # 100hz
+    rate = rospy.Rate(100) # 100hz
     los = LOS()
     los.k = 1
     los.last_waypoint_array = []

@@ -12,6 +12,7 @@ class Test:
         self.testing = True
 
         self.path_pub = rospy.Publisher("/mission/waypoints", Float32MultiArray, queue_size=10)
+        self.des_altitude_pub = rospy.Publisher("/ad", Float64, queue_size=10)
         rospy.Subscriber("/vectornav/ins_2d/NED_pose", Pose2D, self.ned_callback)
 
     def ned_callback(self, gps):
@@ -51,6 +52,7 @@ def main():
             path_array.layout.data_offset = len(path)
             path_array.data = path
             t.desired(path_array)
+            t.des_altitude_pub.publish(0.000000568)
             last = len(path) - 1
             i = 1
 
@@ -58,7 +60,7 @@ def main():
             dx = t.ned_x - (x_0)
             dy = t.ned_y - (y_0 + 2*d)
             distance = np.sqrt(dx**2 + dy**2)
-            if distance < 1:
+            if distance < 0.5:
                 i = 2
                 path = []
                 th = 0
@@ -77,6 +79,7 @@ def main():
             path_array.layout.data_offset = len(path)
             path_array.data = path
             t.desired(path_array)
+            t.des_altitude_pub.publish(0.0000023)
             i = 3
             t.testing = False
         rate.sleep()
