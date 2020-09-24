@@ -53,6 +53,16 @@ public:
   static const float ki_u = 0.2;
   static const float kp_psi = 0.8;
   static const float kd_psi = 3;
+
+  float o_dot_dot;
+  float o_dot;
+  float o;
+  float o_last;
+  float o_dot_last;
+  float o_dot_dot_last;
+  static const float f1 = 2;
+  static const float f2 = 2;
+  static const float f3 = 2;
     
   float Tx;
   float Tz;
@@ -66,6 +76,7 @@ public:
     left_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/left_thruster", 1000);
     speed_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/speed_error", 1000);
     heading_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/heading_error", 1000);
+    control_input_pub = n.advertise<geometry_msgs::Pose2D>("/usv_control/controller/control_input", 1000);
 
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &ProportionalIntegralDerivative::desiredSpeedCallback, this);
     desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, &ProportionalIntegralDerivative::desiredHeadingCallback, this);
@@ -137,6 +148,14 @@ public:
       e_u_dot = (e_u - e_u_last) / time_step; //derivate of the surge speed error
       e_u_last = e_u;
 
+      o_dot_dot = (((e_u_dot - o_last) * f1) - (f3 * o_dot_last)) * f2;
+      o_dot = (time_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
+      o = (time_step)*(o_dot + o_dot_last)/2 + o;
+      e_u_dot = o;
+      o_last = o;
+      o_dot_last = o_dot;
+      o_dot_dot_last = o_dot_dot;
+
       float e_psi = psi_d - theta;
       if (std::abs(e_psi) > 3.141592){
           e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi)-2*3.141592);
@@ -167,6 +186,12 @@ public:
         Tz = 0;
         e_u_int = 0;
         e_u_last = 0;
+        o_dot_dot = 0;
+        o_dot = 0;
+        o = 0;
+        o_last = 0;
+        o_dot_last = 0;
+        o_dot_dot_last = 0;
       }
 
       Tport = (Tx / 2) + (Tz / B);
@@ -193,17 +218,23 @@ public:
       std_msgs::Float64 eu;
       std_msgs::Float64 epsi;
 
+      geometry_msgs::Pose2D ctrl_input;
+
       rt.data = Tstbd;
       lt.data = Tport;
       
       eu.data = e_u;
       epsi.data = e_psi;
 
+      ctrl_input.x = Tx;
+      ctrl_input.theta = Tz;
+
       right_thruster_pub.publish(rt);
       left_thruster_pub.publish(lt);
 
       speed_error_pub.publish(eu);
       heading_error_pub.publish(epsi);
+      control_input_pub.publish(ctrl_input);
     }
   }
 
@@ -215,6 +246,7 @@ private:
   ros::Publisher left_thruster_pub;
   ros::Publisher speed_error_pub;
   ros::Publisher heading_error_pub;
+  ros::Publisher control_input_pub;
 
   ros::Subscriber desired_speed_sub;
   ros::Subscriber desired_heading_sub;
