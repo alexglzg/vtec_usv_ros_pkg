@@ -40,10 +40,11 @@ int main(int argc, char** argv){
   ros::init(argc, argv, "waypoints2path");
   Waypoint2Path waypoint2Path;
 
-  while(true){
+  while (ros::ok()){
     ros::Rate(100).sleep();
     ros::spinOnce();
   }
 
+  ros::spin();
   return 0;
 }

@@ -19,6 +19,9 @@ public:
 	float Tstbd;
 	float Tport;
 
+	float delta_x;
+	float delta_y;
+
 	//Hydrodynamic parameters
 	float Xu;
 	float Yv;
@@ -63,6 +66,7 @@ public:
 	Matrix3f Dn;
 	Matrix3f D;
 	Matrix3f J;
+	Vector3f Delta;
 
 	float x;
 	float y;
@@ -87,6 +91,7 @@ public:
 
 		right_thruster_sub = n.subscribe("/usv_control/controller/right_thruster", 1000, &DynamicModel::right_callback, this);
 		left_thruster_sub = n.subscribe("/usv_control/controller/left_thruster", 1000, &DynamicModel::left_callback, this);
+		disturbance_sub = n.subscribe("/usv_disturbance", 1000, &DynamicModel::dist_callback, this);
 
 		upsilon << 0, 0, 0;
 		upsilon_dot_last << 0, 0, 0;
@@ -97,6 +102,10 @@ public:
 		M << m - X_u_dot, 0, 0,
 			0, m - Y_v_dot, 0 - Y_r_dot,
 			0, 0 - N_v_dot, Iz - N_r_dot;
+		
+		J << cos(eta(2)), -sin(eta(2)), 0,
+			sin(eta(2)), cos(eta(2)), 0,
+			0, 0, 1;
 
 	}
 
@@ -108,6 +117,12 @@ public:
 	void left_callback(const std_msgs::Float64::ConstPtr& left)
 	{
 		Tport = left->data; //left thruster input in Newtons
+	}
+
+	void dist_callback(const geometry_msgs::Pose2D::ConstPtr& delta)
+	{
+		delta_x = delta->x; //North disturbance in Newtons
+		delta_y = delta->y; //East disturbance in Newtons
 	}
 
 	void time_step()
@@ -124,7 +139,13 @@ public:
 		Yr = 6*(-3.141592*1000)*sqrt(pow(upsilon(0),2)+pow(upsilon(1),2))*0.09*0.09*1.01;
 		Nv = 0.06*(-3.141592*1000)*sqrt(pow(upsilon(0),2)+pow(upsilon(1),2))*0.09*0.09*1.01;
 		Nr = 0.02*(-3.141592*1000)*sqrt(pow(upsilon(0),2)+pow(upsilon(1),2))*0.09*0.09*1.01*1.01;
-		
+
+		//Vector of NED disturbances
+		Delta << delta_x, delta_y, 0;
+
+		//Vector of body disturbances
+		Delta = J.inverse()*Delta;
+
 		//Vector tau of torques
 		T << Tport + c*Tstbd, 0, 0.5*B*(Tport - c*Tstbd);
 
@@ -154,7 +175,7 @@ public:
 		//Drag matrix
 		D = Dl - Dn;
 
-		upsilon_dot =  M.inverse()*(T - C * upsilon - D * upsilon); //acceleration vector [u' v' r']
+		upsilon_dot =  M.inverse()*(T - (C * upsilon) - (D * upsilon) + Delta); //acceleration vector [u' v' r']
 		upsilon = integral_step * (upsilon_dot + upsilon_dot_last)/2 + upsilon; //integral [u v r]
 		upsilon_dot_last = upsilon_dot;
 
@@ -226,6 +247,7 @@ private:
 
 	ros::Subscriber right_thruster_sub;
 	ros::Subscriber left_thruster_sub;
+	ros::Subscriber disturbance_sub;
 
 };
 
