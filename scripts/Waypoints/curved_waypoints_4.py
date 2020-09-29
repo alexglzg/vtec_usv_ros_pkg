@@ -43,6 +43,15 @@ def main():
     time.sleep(2)
     usv_disturbance = Pose2D()
     uav_disturbance = Vector3()
+    o_dot_dot = 0
+    o_dot = 0
+    o = 0.000000568
+    o_last = 0.000000568
+    o_dot_last = 0
+    o_dot_dot_last = 0
+    f1 = 2
+    f2 = 2
+    f3 = 2
     start_time = rospy.Time.now().secs
     while not rospy.is_shutdown() and t.testing:
         if i == 0:
@@ -83,8 +92,15 @@ def main():
             path.append(0)
             path_array.layout.data_offset = len(path)
             path_array.data = path
+            a_d = 0.0000023
+            o_dot_dot = (((a_d - o_last) * f1) - (f3 * o_dot_last)) * f2
+            o_dot = (0.01)*(o_dot_dot + o_dot_dot_last)/2 + o_dot
+            o = (0.01)*(o_dot + o_dot_last)/2 + o
+            o_last = o
+            o_dot_last = o_dot
+            o_dot_dot_last = o_dot_dot
             t.desired(path_array)
-            t.des_altitude_pub.publish(0.0000023)
+            t.des_altitude_pub.publish(o)
             i = 3
 
         now = rospy.Time.now().secs - start_time
