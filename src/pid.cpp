@@ -29,6 +29,7 @@ public:
   //Tracking variables
   float u_d;
   float psi_d;
+  float r_d;
 
   //Auxiliry variables
   float e_u_int;
@@ -155,7 +156,7 @@ public:
           e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi)-2*3.141592);
       }
 
-      float r_d = (psi_d - psi_d_last) / time_step; //derivate of the desired heading
+      r_d = (psi_d - psi_d_last) / time_step; //derivate of the desired heading
       psi_d_last = psi_d;
 
       f_dot_dot = (((r_d - f_last) * g1) - (g3 * f_dot_last)) * g2;
@@ -199,9 +200,15 @@ public:
         o_last = 0;
         o_dot_last = 0;
         o_dot_dot_last = 0;
+        f_dot_dot = 0;
+        f_dot = 0;
+        f = 0;
+        f_last = 0;
+        f_dot_last = 0;
+        f_dot_dot_last = 0;
       }
 
-      ROS_INFO("e_dot %f, e_int %f", e_u_dot, e_u_int);
+      //ROS_INFO("r_d %f", r_d);
 
 
       Tport = (Tx / 2) + (Tz / B);
