@@ -34,6 +34,7 @@ public:
   float e_u_int;
   float e_u_dot;
   float e_u_last;
+  float psi_d_last;
 
   //Model pysical parameters
   static const float B = 0.41;
@@ -55,6 +56,16 @@ public:
   static const float f1 = 2;
   static const float f2 = 2;
   static const float f3 = 2;
+
+  float f_dot_dot;
+  float f_dot;
+  float f;
+  float f_last;
+  float f_dot_last;
+  float f_dot_dot_last;
+  static const float g1 = 2;
+  static const float g2 = 2;
+  static const float g3 = 2;
 
   float Tx;
   float Tz;
@@ -143,7 +154,19 @@ public:
       if (std::abs(e_psi) > 3.141592){
           e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi)-2*3.141592);
       }
-      float e_psi_dot = 0 - r; //derivate of the heading error
+
+      float r_d = (psi_d - psi_d_last) / time_step; //derivate of the desired heading
+      psi_d_last = psi_d;
+
+      f_dot_dot = (((r_d - f_last) * g1) - (g3 * f_dot_last)) * g2;
+      f_dot = (time_step)*(f_dot_dot + f_dot_dot_last)/2 + f_dot;
+      f = (time_step)*(f_dot + f_dot_last)/2 + f;
+      r_d = f;
+      f_last = f;
+      f_dot_last = f_dot;
+      f_dot_dot_last = f_dot_dot;
+
+      float e_psi_dot = r_d - r; //derivate of the heading error
 
       ua_u = (kp_u * e_u) + (ki_u * e_u_int) + (kd_u * e_u_dot);
       ua_psi = (kp_psi * e_psi) + (kd_psi * e_psi_dot);
