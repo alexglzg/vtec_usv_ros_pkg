@@ -24,7 +24,7 @@
             </geometry>
             <material>
               <script>
-                <uri>file://home/alex/Documents/rasp_ws/src/sensors/Media/materials/scripts/sand.material</uri>
+                <uri>file:///home/alex/Documents/rasp_ws/src/sensors/Media/materials/scripts/sand.material</uri>
                 <name>UUVSimulator/SandAndStones</name>
               </script>
             </material>
