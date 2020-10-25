@@ -34,7 +34,31 @@ public:
   float e_u_last;
   float e_r_int;
   float e_r_last;
-  static const float sqr2 = pow(2,0.5);
+  float sigma_u_last;
+  float sigma_r_last;
+  float Delta_hat_dot_last_u;
+  float Delta_hat_dot_last_r;
+  float sqr2;
+
+  float o_dot_dot;
+  float o_dot;
+  float o;
+  float o_last;
+  float o_dot_last;
+  float o_dot_dot_last;
+  static const float o1 = 2;
+  static const float o2 = 2;
+  static const float o3 = 2;
+
+  float g_dot_dot;
+  float g_dot;
+  float g;
+  float g_last;
+  float g_dot_last;
+  float g_dot_dot_last;
+  static const float g1 = 2;
+  static const float g2 = 2;
+  static const float g3 = 2;
 
   //Model pysical parameters
   float Xu;
@@ -43,6 +67,7 @@ public:
   static const float Y_v_dot = -23.13;
   static const float N_r_dot = -2.79;
   float Xuu;
+  static const float Nrr = -3.49;
   static const float m = 30;
   static const float Iz = 4.1;
   static const float B = 0.41;
@@ -70,16 +95,21 @@ public:
   float eta_r;
 
   //Fixed-time variables
-  float tc;
   float L1;
   float L1_dot;
   float epsilon;
+  float ro;
 
   //Observer
   float Delta_hat_u;
   float Delta_hat_r;
   float Delta_tilde_u;
   float Delta_tilde_r;
+  float Delta_hat_dot_u;
+  float Delta_hat_dot_r;
+
+  float k_delta_u;
+  float k_delta_r;
 
   AdaptiveSlidingModeControl()
   {
@@ -101,10 +131,10 @@ public:
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSlidingModeControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &AdaptiveSlidingModeControl::arduinoCallback, this);
 
-    static const float dtc = 3;
-    static const float dL1 = 0.4;
+    static const float dL1 = 0;
     static const float dL1_dot = 0;
     static const float depsilon = 0.003;
+    static const float dro = 0.1;
     static const float dK2_u = 0.1;
     static const float dK2_r = 0.1;
     static const float dmu_u = 0.05;
@@ -114,23 +144,26 @@ public:
     static const float deta_u = 0.4714;
     static const float deta_r = 0.1851;
 
-    n.param("/asmc/tc", tc, dtc);
-    n.param("/asmc/L1", L1, dL1);
-    n.param("/asmc/L1_dot", L1_dot, dL1_dot);
-    n.param("/asmc/epsilon", epsilon, depsilon);
-    n.param("/asmc/K2_u", K2_u, dK2_u);
-    n.param("/asmc/K2_r", K2_r, dK2_r);
-    n.param("/asmc/mu_u", mu_u, dmu_u);
-    n.param("/asmc/mu_r", mu_r, dmu_r);
-    n.param("/asmc/lambda_u", lambda_u, dlambda_u);
-    n.param("/asmc/lambda_r", lambda_r, dlambda_r);
-    n.param("/asmc/eta_u", eta_u, deta_u);
-    n.param("/asmc/eta_r", eta_r, deta_r);
+    n.param("/fixed_time_asmc/L1", L1, dL1);
+    n.param("/fixed_time_asmc/L1_dot", L1_dot, dL1_dot);
+    n.param("/fixed_time_asmc/epsilon", epsilon, depsilon);
+    n.param("/fixed_time_asmc/ro", ro, dro);
+    n.param("/fixed_time_asmc/K2_u", K2_u, dK2_u);
+    n.param("/fixed_time_asmc/K2_r", K2_r, dK2_r);
+    n.param("/fixed_time_asmc/mu_u", mu_u, dmu_u);
+    n.param("/fixed_time_asmc/mu_r", mu_r, dmu_r);
+    n.param("/fixed_time_asmc/lambda_u", lambda_u, dlambda_u);
+    n.param("/fixed_time_asmc/lambda_r", lambda_r, dlambda_r);
+    n.param("/fixed_time_asmc/eta_u", eta_u, deta_u);
+    n.param("/fixed_time_asmc/eta_r", eta_r, deta_r);
 
     u_d = 0;
     r_d = 0;
     testing = 0;
     arduino = 0;
+    sqr2 = pow(2,0.5);
+    Delta_hat_u = 0;
+    Delta_hat_r = 0;
 
   }
 
@@ -178,7 +211,7 @@ public:
       float g_r = (1 / (Iz - N_r_dot));
 
       float f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
-      float f_r = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
+      float f_r = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r + Nrr*r*std::abs(r))) / (Iz - N_r_dot));
 
       float e_u = u_d - u;
       float e_r = r_d - r;
@@ -191,13 +224,32 @@ public:
 
       float sigma_u = e_u + lambda_u * e_u_int;
       float sigma_r = e_r + lambda_r * e_r_int;
+
+      float sigma_u_dot = (sigma_u - sigma_u_last) / integral_step;
+
+      o_dot_dot = (((sigma_u_dot - o_last) * o1) - (o3 * o_dot_last)) * o2;
+      o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
+      o = (integral_step)*(o_dot + o_dot_last)/2 + o;
+      sigma_u_dot = o;
+      o_last = o;
+      o_dot_last = o_dot;
+      o_dot_dot_last = o_dot_dot;
+      sigma_u_last = sigma_u;
+
+      float sigma_r_dot = (sigma_r - sigma_r_last) / integral_step;
+
+      g_dot_dot = (((sigma_r_dot - g_last) * g1) - (g3 * g_dot_last)) * g2;
+      g_dot = (integral_step)*(g_dot_dot + g_dot_dot_last)/2 + g_dot;
+      g = (integral_step)*(g_dot + g_dot_last)/2 + g;
+      sigma_r_dot = g;
+      g_last = g;
+      g_dot_last = g_dot;
+      g_dot_dot_last = g_dot_dot;
+      sigma_r_last = sigma_r;
       
       float sigma_u_abs = std::abs(sigma_u);
       float sigma_r_abs = std::abs(sigma_r);
       
-      int sign_u_sm = 0;
-      int sign_r_sm = 0;
-
       int sign_u = 0;
       int sign_r = 0;
 
@@ -215,13 +267,54 @@ public:
         sign_r = copysign(1,sigma_r);
       }
 
-
-
       Ka_u = (1/pow(sigma_u_abs,0.5)) * (Delta_hat_u*sign_u + (eta_u/sqr2) - K2_u*sigma_u_abs);
       Ka_r = (1/pow(sigma_r_abs,0.5)) * (Delta_hat_r*sign_r + (eta_r/sqr2) - K2_r*sigma_r_abs);
 
       ua_u = ((-Ka_u) * pow(sigma_u_abs,0.5) * sign_u) - (K2_u*sigma_u);
       ua_r = ((-Ka_r) * pow(sigma_r_abs,0.5) * sign_r) - (K2_r*sigma_r);
+
+      Delta_tilde_u = sigma_u_dot - Delta_hat_u - ua_u;
+      Delta_tilde_r = sigma_r_dot - Delta_hat_r - ua_r;
+
+      int sign_delta_tilde_u = 0;
+      int sign_delta_tilde_r = 0;
+
+      if (Delta_tilde_u == 0){
+        sign_delta_tilde_u = 0;
+      }
+      else {
+        sign_delta_tilde_u = copysign(1,Delta_tilde_u);
+      }
+
+      if (Delta_tilde_r == 0){
+        sign_delta_tilde_r = 0;
+      }
+      else {
+        sign_delta_tilde_r = copysign(1,Delta_tilde_r);
+      }
+
+      if (std::abs(Delta_tilde_u) < epsilon){
+        k_delta_u = L1_dot / pow(std::abs(epsilon),0.5);
+      }
+      else{
+        k_delta_u = (1 / pow(std::abs(Delta_tilde_u),0.5)) * ((L1 * eta_u)/(ro*std::abs(u_d)*sqr2) + L1_dot);
+      }
+
+      if (std::abs(Delta_tilde_r) < epsilon){
+        k_delta_r = L1_dot / pow(std::abs(epsilon),0.5);
+      }
+      else{
+        k_delta_r = (1 / pow(std::abs(Delta_tilde_r),0.5)) * ((L1 * eta_r)/(ro*std::abs(r_d)*sqr2) + L1_dot);
+      }
+
+      Delta_hat_dot_u = k_delta_u * pow(std::abs(Delta_tilde_u),0.5) * sign_delta_tilde_u;
+      Delta_hat_dot_r = k_delta_r * pow(std::abs(Delta_tilde_r),0.5) * sign_delta_tilde_r;
+
+      Delta_hat_u = (integral_step)*(Delta_hat_dot_u + Delta_hat_dot_last_u)/2 + Delta_hat_u;
+      Delta_hat_dot_last_u = Delta_hat_dot_u;
+
+      Delta_hat_r = (integral_step)*(Delta_hat_dot_r + Delta_hat_dot_last_r)/2 + Delta_hat_r;
+      Delta_hat_dot_last_r = Delta_hat_dot_r;
 
       Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
       Tz = ((lambda_r * e_r) - f_r - ua_r) / g_r; //yaw rate moment
@@ -250,8 +343,24 @@ public:
         e_u_last = 0;
         e_r_int = 0;
         e_r_last = 0;
+        sigma_u_last = 0;
+        sigma_r_last = 0;
         Delta_hat_u = 0;
         Delta_hat_r = 0;
+        Delta_hat_dot_last_u = 0;
+        Delta_hat_dot_last_r = 0;
+        o_dot_dot = 0;
+        o_dot = 0;
+        o = 0;
+        o_last = 0;
+        o_dot_last = 0;
+        o_dot_dot_last = 0;
+        g_dot_dot = 0;
+        g_dot = 0;
+        g = 0;
+        g_last = 0;
+        g_dot_last = 0;
+        g_dot_dot_last = 0;
       }
 
       port_t = (Tx / 2) + (Tz / B);
