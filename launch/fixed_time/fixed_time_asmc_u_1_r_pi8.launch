@@ -6,11 +6,11 @@
 
     <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
 
-    <node pkg="sensors" type="cs_ch_2.py" name="cs_ch_2" />
+    <node pkg="sensors" type="cu_cr.py" name="cu_cr" />
 
-    <include file="$(find sensors)/launch/asmc.launch" />
+    <include file="$(find sensors)/launch/fixed_time_asmc.launch" />
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/asmc/u_1_psi_ref" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o /home/ubuntu/catkin_ws/src/sensors/bags/fixed_time/u_1_r_pi8" />
 
 </launch>

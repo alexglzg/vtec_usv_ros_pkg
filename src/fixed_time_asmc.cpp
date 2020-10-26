@@ -30,15 +30,34 @@ public:
   float r_d;
 
   //Auxiliry variables
+  float e_u;
   float e_u_int;
   float e_u_last;
+  float e_r;
   float e_r_int;
   float e_r_last;
+  float sigma_u;
   float sigma_u_last;
+  float sigma_u_dot;
+  float sigma_u_abs;
+  float sigma_r;
   float sigma_r_last;
+  float sigma_r_dot;
+  float sigma_r_abs;
   float Delta_hat_dot_last_u;
   float Delta_hat_dot_last_r;
   float sqr2;
+  int convergence_u;
+  int convergence_r;
+  float u_abs;
+  float g_u;
+  float g_r;
+  float f_u;
+  float f_r;
+  int sign_u;
+  int sign_r;
+  int sign_delta_tilde_u;
+  int sign_delta_tilde_r;
 
   float o_dot_dot;
   float o_dot;
@@ -93,6 +112,10 @@ public:
   float lambda_r;
   float eta_u;
   float eta_r;
+  float k_u;
+  float k_r;
+  float Kmin_u;
+  float Kmin_r;
 
   //Fixed-time variables
   float L1;
@@ -123,6 +146,8 @@ public:
     heading_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/heading_gain", 1000);
     heading_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/heading_error", 1000);
     control_input_pub = n.advertise<geometry_msgs::Pose2D>("/usv_control/controller/control_input", 1000);
+    observer_pub = n.advertise<geometry_msgs::Pose2D>("/usv_control/observer", 1000);
+    observer_error_pub = n.advertise<geometry_msgs::Pose2D>("/usv_control/observer_error", 1000);
     
     //ROS Subscribers
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &AdaptiveSlidingModeControl::desiredSpeedCallback, this);
@@ -131,9 +156,9 @@ public:
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSlidingModeControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &AdaptiveSlidingModeControl::arduinoCallback, this);
 
-    static const float dL1 = 0;
+    static const float dL1 = 0.1;
     static const float dL1_dot = 0;
-    static const float depsilon = 0.003;
+    static const float depsilon = 0.001;
     static const float dro = 0.1;
     static const float dK2_u = 0.1;
     static const float dK2_r = 0.1;
@@ -143,6 +168,10 @@ public:
     static const float dlambda_r = 0.01;
     static const float deta_u = 0.4714;
     static const float deta_r = 0.1851;
+    static const float dk_u = 0.1;
+    static const float dk_r = 0.1;
+    static const float dKmin_u = 0.05;
+    static const float dKmin_r = 0.05;
 
     n.param("/fixed_time_asmc/L1", L1, dL1);
     n.param("/fixed_time_asmc/L1_dot", L1_dot, dL1_dot);
@@ -156,6 +185,10 @@ public:
     n.param("/fixed_time_asmc/lambda_r", lambda_r, dlambda_r);
     n.param("/fixed_time_asmc/eta_u", eta_u, deta_u);
     n.param("/fixed_time_asmc/eta_r", eta_r, deta_r);
+    n.param("/fixed_time_asmc/k_u", k_u, dk_u);
+    n.param("/fixed_time_asmc/k_r", k_r, dk_r);
+    n.param("/fixed_time_asmc/Kmin_u", Kmin_u, dKmin_u);
+    n.param("/fixed_time_asmc/Kmin_r", Kmin_r, dKmin_r);
 
     u_d = 0;
     r_d = 0;
@@ -164,6 +197,8 @@ public:
     sqr2 = pow(2,0.5);
     Delta_hat_u = 0;
     Delta_hat_r = 0;
+    convergence_u = 0;
+    convergence_r = 0;
 
   }
 
@@ -199,7 +234,7 @@ public:
     if (testing == 1 && arduino == 1){
       Xu = -25;
       Xuu = 0;
-      float u_abs = std::abs(u);
+      u_abs = std::abs(u);
       if (u_abs > 1.2){
         Xu = 64.55;
         Xuu = -70.92;
@@ -207,14 +242,14 @@ public:
 
       Nr = (-0.52)*pow(pow(u,2) + pow(v,2),0.5);
 
-      float g_u = (1 / (m - X_u_dot));
-      float g_r = (1 / (Iz - N_r_dot));
+      g_u = (1 / (m - X_u_dot));
+      g_r = (1 / (Iz - N_r_dot));
 
-      float f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
-      float f_r = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r + Nrr*r*std::abs(r))) / (Iz - N_r_dot));
+      f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
+      f_r = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r + Nrr*r*std::abs(r))) / (Iz - N_r_dot));
 
-      float e_u = u_d - u;
-      float e_r = r_d - r;
+      e_u = u_d - u;
+      e_r = r_d - r;
 
       e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
       e_u_last = e_u;
@@ -222,10 +257,10 @@ public:
       e_r_int = (integral_step)*(e_r + e_r_last)/2 + e_r_int; //integral of the heading error
       e_r_last = e_r;
 
-      float sigma_u = e_u + lambda_u * e_u_int;
-      float sigma_r = e_r + lambda_r * e_r_int;
+      sigma_u = e_u + lambda_u * e_u_int;
+      sigma_r = e_r + lambda_r * e_r_int;
 
-      float sigma_u_dot = (sigma_u - sigma_u_last) / integral_step;
+      sigma_u_dot = (sigma_u - sigma_u_last) / integral_step;
 
       o_dot_dot = (((sigma_u_dot - o_last) * o1) - (o3 * o_dot_last)) * o2;
       o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
@@ -236,7 +271,7 @@ public:
       o_dot_dot_last = o_dot_dot;
       sigma_u_last = sigma_u;
 
-      float sigma_r_dot = (sigma_r - sigma_r_last) / integral_step;
+      sigma_r_dot = (sigma_r - sigma_r_last) / integral_step;
 
       g_dot_dot = (((sigma_r_dot - g_last) * g1) - (g3 * g_dot_last)) * g2;
       g_dot = (integral_step)*(g_dot_dot + g_dot_dot_last)/2 + g_dot;
@@ -247,12 +282,9 @@ public:
       g_dot_dot_last = g_dot_dot;
       sigma_r_last = sigma_r;
       
-      float sigma_u_abs = std::abs(sigma_u);
-      float sigma_r_abs = std::abs(sigma_r);
+      sigma_u_abs = std::abs(sigma_u);
+      sigma_r_abs = std::abs(sigma_r);
       
-      int sign_u = 0;
-      int sign_r = 0;
-
       if (sigma_u == 0){
         sign_u = 0;
       }
@@ -267,8 +299,57 @@ public:
         sign_r = copysign(1,sigma_r);
       }
 
-      Ka_u = (1/pow(sigma_u_abs,0.5)) * (Delta_hat_u*sign_u + (eta_u/sqr2) - K2_u*sigma_u_abs);
-      Ka_r = (1/pow(sigma_r_abs,0.5)) * (Delta_hat_r*sign_r + (eta_r/sqr2) - K2_r*sigma_r_abs);
+      if (sigma_u_abs <= mu_u){
+        convergence_u = 1;
+      }
+
+      if (sigma_r_abs <= mu_r){
+        convergence_r = 1;
+      }
+
+      if (convergence_u == 0){
+        Ka_u = (1/pow(sigma_u_abs,0.5)) * (Delta_hat_u*sign_u + (eta_u/sqr2) - K2_u*sigma_u_abs);
+      }
+      else if (convergence_u == 1){
+        int sign_u_sm = 0;
+        if (Ka_u > Kmin_u){
+          float signvar = sigma_u_abs - mu_u;
+          if (signvar == 0){
+            sign_u_sm = 0;
+          }
+          else {
+            sign_u_sm = copysign(1,signvar);
+          }
+          Ka_dot_u = k_u * sign_u_sm;
+        }
+        else{
+          Ka_dot_u = Kmin_u;
+        }
+        Ka_u = (integral_step)*(Ka_dot_u + Ka_dot_last_u)/2 + Ka_u;
+        Ka_dot_last_u = Ka_dot_u; 
+      }
+
+      if (convergence_r == 0){
+        Ka_r = (1/pow(sigma_r_abs,0.5)) * (Delta_hat_r*sign_r + (eta_r/sqr2) - (K2_r*sigma_r_abs));
+      }
+      else if (convergence_r == 1){
+        int sign_r_sm = 0;
+        if (Ka_r > Kmin_r){
+          float signvar = sigma_r_abs - mu_r;
+          if (signvar == 0){
+            sign_r_sm = 0;
+          }
+          else {
+            sign_r_sm = copysign(1,signvar);
+          }
+          Ka_dot_r = k_r * sign_r_sm;
+        }
+        else{
+          Ka_dot_r = Kmin_r;
+        }
+        Ka_r = (integral_step)*(Ka_dot_r + Ka_dot_last_r)/2 + Ka_r;
+        Ka_dot_last_r = Ka_dot_r;
+      }
 
       ua_u = ((-Ka_u) * pow(sigma_u_abs,0.5) * sign_u) - (K2_u*sigma_u);
       ua_r = ((-Ka_r) * pow(sigma_r_abs,0.5) * sign_r) - (K2_r*sigma_r);
@@ -276,8 +357,8 @@ public:
       Delta_tilde_u = sigma_u_dot - Delta_hat_u - ua_u;
       Delta_tilde_r = sigma_r_dot - Delta_hat_r - ua_r;
 
-      int sign_delta_tilde_u = 0;
-      int sign_delta_tilde_r = 0;
+      sign_delta_tilde_u = 0;
+      sign_delta_tilde_r = 0;
 
       if (Delta_tilde_u == 0){
         sign_delta_tilde_u = 0;
@@ -322,45 +403,58 @@ public:
       if (Tx > 73){
         Tx = 73;
       }
-      else if (Tx < -60){
+      if (Tx < -60){
         Tx = -60;
       }
       if (Tz > 14){
         Tz = 14;
       }
-      else if (Tz < -14){
+      if (Tz < -14){
         Tz = -14;
       }
       
       if (u_d == 0){
         Tx = 0;
         Tz = 0;
+
         Ka_u = 0;
         Ka_dot_last_u = 0;
         Ka_r = 0;
         Ka_dot_last_r = 0;
+        
+        e_u = 0;
         e_u_int = 0;
         e_u_last = 0;
+        e_r = 0;
         e_r_int = 0;
         e_r_last = 0;
+        
+        sigma_u = 0;
         sigma_u_last = 0;
+        sigma_r = 0;
         sigma_r_last = 0;
+        
         Delta_hat_u = 0;
         Delta_hat_r = 0;
         Delta_hat_dot_last_u = 0;
         Delta_hat_dot_last_r = 0;
+        
         o_dot_dot = 0;
         o_dot = 0;
         o = 0;
         o_last = 0;
         o_dot_last = 0;
         o_dot_dot_last = 0;
+        
         g_dot_dot = 0;
         g_dot = 0;
         g = 0;
         g_last = 0;
         g_dot_last = 0;
         g_dot_dot_last = 0;
+        
+        convergence_u = 0;
+        convergence_r = 0;
       }
 
       port_t = (Tx / 2) + (Tz / B);
@@ -369,13 +463,13 @@ public:
       if (starboard_t > 36.5){
         starboard_t = 36.5;
       }
-      else if (starboard_t < -30){
+      if (starboard_t < -30){
         starboard_t = -30;
       }
       if (port_t > 36.5){
         port_t = 36.5;
       }
-      else if (port_t < -30){
+      if (port_t < -30){
         port_t = -30;
       }
 
@@ -393,6 +487,8 @@ public:
       std_msgs::Float64 sp;
 
       geometry_msgs::Pose2D ctrl_input;
+      geometry_msgs::Pose2D observer;
+      geometry_msgs::Pose2D observer_error;
 
       rt.data = starboard_t;
       lt.data = port_t;
@@ -409,6 +505,12 @@ public:
       ctrl_input.x = Tx;
       ctrl_input.theta = Tz;
 
+      observer.x = Delta_hat_u;
+      observer.theta = Delta_hat_r;
+
+      observer_error.x = Delta_tilde_u;
+      observer_error.theta = Delta_tilde_r;
+
       right_thruster_pub.publish(rt);
       left_thruster_pub.publish(lt);
 
@@ -419,6 +521,8 @@ public:
       heading_error_pub.publish(er);
       heading_sigma_pub.publish(sp);
       control_input_pub.publish(ctrl_input);
+      observer_pub.publish(observer);
+      observer_error_pub.publish(observer_error);
     }
   }
 
@@ -434,6 +538,8 @@ private:
   ros::Publisher heading_gain_pub;
   ros::Publisher heading_error_pub;
   ros::Publisher control_input_pub;
+  ros::Publisher observer_pub;
+  ros::Publisher observer_error_pub;
 
   ros::Subscriber desired_speed_sub;
   ros::Subscriber desired_heading_sub;
@@ -458,3 +564,4 @@ int main(int argc, char *argv[])
   }
   return 0;
 }
+

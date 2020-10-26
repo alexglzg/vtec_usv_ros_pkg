@@ -13,6 +13,10 @@
 		<param name = "L1_dot" value = "0" />
 		<param name = "ro" value = "0.1" />
 		<param name = "epsilon" value = "0.003" />
+		<param name = "k_u" value = "0.1" />
+		<param name = "k_r" value = "0.1" />
+		<param name = "Kmin_u" value = "0.05" />
+		<param name = "Kmin_r" value = "0.05" /-->
     </node>
 
 </launch>
