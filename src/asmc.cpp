@@ -268,7 +268,6 @@ public:
 
       Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
       Tz = ((lambda_psi * e_psi_dot) - f_psi - ua_psi) / g_psi; //yaw rate moment
-      //Tz = (- f_psi + (((lambda_psi * e_psi_dot) - ua_psi) / 0.1)) / (g_psi); //yaw rate moment
       
       if (Tx > 73){
         Tx = 73;

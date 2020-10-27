@@ -1,0 +1,22 @@
+<launch>
+
+    <node name="fixed_time_asmc" pkg="sensors" type="fixed_time_asmc" >
+		<param name = "eta_u" value = "0.4714" />
+		<param name = "eta_r" value = "0.1851" />
+		<param name = "K2_u" value = "0.1" />
+		<param name = "K2_r" value = "0.1" />
+		<param name = "mu_u" value = "0.05" />
+		<param name = "mu_r" value = "0.05" />
+		<param name = "lambda_u" value = "0.01" />
+		<param name = "lambda_r" value = "0.01" />
+		<param name = "L1" value = "0.4" />
+		<param name = "L1_dot" value = "0" />
+		<param name = "ro" value = "0.1" />
+		<param name = "epsilon" value = "0.003" />
+		<param name = "k_u" value = "0.1" />
+		<param name = "k_r" value = "0.1" />
+		<param name = "Kmin_u" value = "0.05" />
+		<param name = "Kmin_r" value = "0.05" /-->
+    </node>
+
+</launch>
