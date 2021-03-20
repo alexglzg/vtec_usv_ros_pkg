@@ -4,9 +4,9 @@
 
     <node pkg="sensors" type="pid" name="pid" />
 
-    <node pkg="sensors" type="cs_vh_2.py" name="cs_vh_2" />
+    <node pkg="sensors" type="cs_ch_5.py" name="cs_ch_5" />
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/pid/u_0,7_psi_0,4v" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/pid/u_0,8_psi_1,0" />
 
 </launch>

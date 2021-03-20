@@ -1,0 +1,12 @@
+<launch>
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <!--node pkg="nmpc_ca" type="nmpc_low_level" name="acados_mpc" /-->
+
+    <node pkg="sensors" type="cs_ch_5.py" name="cs_ch_5" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/mpc/u_0,8_psi_1,0" />
+
+</launch>

@@ -173,7 +173,7 @@ public:
       ua_psi = (kp_psi * e_psi) + (kd_psi * e_psi_dot);
     
       Tx = ua_u; //surge force
-      Tz = 0.0;//ua_psi; //yaw rate moment
+      Tz = ua_psi; //yaw rate moment
       
       if (Tx > 73){
         Tx = 73;
