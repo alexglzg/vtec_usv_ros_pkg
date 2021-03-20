@@ -3,6 +3,7 @@
   <include file="$(find sensors)/launch/usv_simulation.launch" />
 
     <node pkg="sensors" type="waypointspf.py" name="waypoints" />
+    <node pkg="sensors" type="waypoints2path" name="waypoints2path" />
 
     <!--Launch rosbag to record topics -->
     <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/mpc_pf/straight" />
