@@ -1,0 +1,17 @@
+<launch>
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <node pkg="sensors" type="waypointspfzz.py" name="waypoints" />
+    <node pkg="sensors" type="waypoints2path" name="waypoints2path" />
+
+    <node name="los" pkg="sensors" type="los.py" >
+	<param name = "speed_equation" value = "0" />
+    </node>
+
+    <node pkg="sensors" type="pid" name="pid" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/los_pid/pid_zz" />
+
+</launch>
