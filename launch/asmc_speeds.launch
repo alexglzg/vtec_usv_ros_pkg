@@ -1,0 +1,16 @@
+<launch>
+
+    <node name="asmc_speeds" pkg="sensors" type="asmc_speeds" >
+	<param name = "k_u" value = "2" />
+	<param name = "k_r" value = "1" />
+	<param name = "kmin_u" value = "0.1" />
+	<param name = "kmin_r" value = "0.1" />
+	<param name = "k2_u" value = "0.1" />
+	<param name = "k2_r" value = "0.1" />
+	<param name = "mu_u" value = "0.01" />
+	<param name = "mu_r" value = "0.05" />
+	<param name = "lambda_u" value = "0.001" />
+	<param name = "lambda_r" value = "0.001" />
+    </node>
+
+</launch>

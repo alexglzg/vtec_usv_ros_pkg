@@ -2,19 +2,27 @@
 
     <node name="asmc" pkg="sensors" type="asmc" >
 	<!--param name = "k_u" value = "0.1" /-->
-	<param name = "k_u" value = "2.0" />
+	<!--param name = "k_u" value = "0.2" /-->
+    <param name = "k_u" value = "2" />
 	<!--param name = "k_psi" value = "0.2" /-->
-	<param name = "k_psi" value = "2.0" />
+	<!--param name = "k_psi" value = "0.1" /-->
+	<param name = "k_psi" value = "2" />
 	<!--param name = "kmin_u" value = "0.05" /-->
+	<!--param name = "kmin_u" value = "0.2" /-->
 	<param name = "kmin_u" value = "0.1" />
 	<!--param name = "kmin_psi" value = "0.2" /-->
+	<!--param name = "kmin_psi" value = "0.1" /-->
 	<param name = "kmin_psi" value = "0.1" />
 	<!--param name = "k2_u" value = "0.02" /-->
+	<!--param name = "k2_u" value = "0.5" /-->
 	<param name = "k2_u" value = "0.1" />
 	<!--param name = "k2_psi" value = "0.1" /-->
-	<param name = "k2_psi" value = "0.1" />
+	<!--param name = "k2_psi" value = "0.2" /-->
+    <param name = "k2_psi" value = "0.1" />
 	<!--param name = "mu_u" value = "0.05" /-->
+	<!--param name = "mu_u" value = "0.01" /-->
 	<param name = "mu_u" value = "0.01" />
+	<!--param name = "mu_psi" value = "0.1" /-->
 	<!--param name = "mu_psi" value = "0.1" /-->
 	<param name = "mu_psi" value = "0.01" />
 	<param name = "lambda_u" value = "0.001" />
