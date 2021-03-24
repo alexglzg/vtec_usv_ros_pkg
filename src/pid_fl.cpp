@@ -47,7 +47,7 @@ public:
   static const float m = 30;
   static const float Iz = 4.1;
   static const float B = 0.41;
-  static const float c = 0.78;
+  static const float c = 1.0;//0.78;
 
   //Controller gains
   static const float kp_u = 1.1;

@@ -50,7 +50,7 @@ public:
 	static const float m = 30; //mass
 	static const float Iz = 4.1; //moment of inertia
 	static const float B = 0.41; //centerline-to-centerline separation
-	static const float c = 0.78; //thruster correction factor
+	static const float c = 1.0;//0.78; //thruster correction factor
 
 	tf2::Quaternion myQuaternion;
 
