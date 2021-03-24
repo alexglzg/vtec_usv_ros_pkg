@@ -303,8 +303,8 @@ int main(int argc, char *argv[])
 {
 	ros::init(argc, argv, "uncertain_model");
 	DynamicModel dynamicModel;
-	dynamicModel.integral_step = 0.01;
-	int rate = 100;
+	dynamicModel.integral_step = 0.001;
+	int rate = 1000;
 	ros::Rate loop_rate(rate);
 
   while (ros::ok())
