@@ -28,12 +28,13 @@ public:
 
   //Tracking variables
   float u_d;
-  float psi_d;
+  float r_d;
 
   //Auxiliry variables
   float e_u_int;
   float e_u_last;
-  float psi_d_last;
+  float e_r_int;
+  float e_r_last;
 
   //Model pysical parameters
   float Xu;
@@ -50,13 +51,13 @@ public:
   float Tx;
   float Tz;
   float Ka_u;
-  float Ka_psi;
+  float Ka_r;
   float Ka_dot_u;
-  float Ka_dot_psi;
+  float Ka_dot_r;
   float Ka_dot_last_u;
-  float Ka_dot_last_psi;
+  float Ka_dot_last_r;
   float ua_u;
-  float ua_psi;
+  float ua_r;
 
   float o_dot_dot;
   float o_dot;
@@ -70,15 +71,15 @@ public:
 
   //Controller gains
   float k_u;
-  float k_psi;
+  float k_r;
   float kmin_u;
-  float kmin_psi;
+  float kmin_r;
   float k2_u;
-  float k2_psi;
+  float k2_r;
   float miu_u;
-  float miu_psi;
+  float miu_r;
   float lambda_u;
-  float lambda_psi;
+  float lambda_r;
 
   AdaptiveSlidingModeControl()
   {
@@ -95,37 +96,36 @@ public:
     
     //ROS Subscribers
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &AdaptiveSlidingModeControl::desiredSpeedCallback, this);
-    desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, &AdaptiveSlidingModeControl::desiredHeadingCallback, this);
+    desired_heading_sub = n.subscribe("/guidance/desired_r", 1000, &AdaptiveSlidingModeControl::desiredHeadingCallback, this);
     ins_pose_sub = n.subscribe("/vectornav/ins_2d/ins_pose", 1000, &AdaptiveSlidingModeControl::insCallback, this);
     local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, &AdaptiveSlidingModeControl::velocityCallback, this);
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSlidingModeControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &AdaptiveSlidingModeControl::arduinoCallback, this);
 
-    static const float dk_u = 0.1;
-    static const float dk_psi = 0.2;
-    static const float dkmin_u = 0.05;
-    static const float dkmin_psi = 0.2;
-    static const float dk2_u = 0.02;
-    static const float dk2_psi = 0.1;
-    static const float dmiu_u = 0.05;
-    static const float dmiu_psi = 0.1;
+    static const float dk_u = 2;
+    static const float dk_r = 2;
+    static const float dkmin_u = 0.1;
+    static const float dkmin_r = 0.1;
+    static const float dk2_u = 0.1;
+    static const float dk2_r = 0.1;
+    static const float dmiu_u = 0.01;
+    static const float dmiu_r = 0.01;
     static const float dlambda_u = 0.001;
-    static const float dlambda_psi = 1;
+    static const float dlambda_r = 0.001;
 
     n.param("/asmc/k_u", k_u, dk_u);
-    n.param("/asmc/k_psi", k_psi, dk_psi);
+    n.param("/asmc/k_r", k_r, dk_r);
     n.param("/asmc/kmin_u", kmin_u, dkmin_u);
-    n.param("/asmc/kmin_psi", kmin_psi, dkmin_psi);
+    n.param("/asmc/kmin_r", kmin_r, dkmin_r);
     n.param("/asmc/k2_u", k2_u, dk2_u);
-    n.param("/asmc/k2_psi", k2_psi, dk2_psi);
+    n.param("/asmc/k2_r", k2_r, dk2_r);
     n.param("/asmc/mu_u", miu_u, dmiu_u);
-    n.param("/asmc/mu_psi", miu_psi, dmiu_psi);
+    n.param("/asmc/mu_r", miu_r, dmiu_r);
     n.param("/asmc/lambda_u", lambda_u, dlambda_u);
-    n.param("/asmc/lambda_psi", lambda_psi, dlambda_psi);
+    n.param("/asmc/lambda_r", lambda_r, dlambda_r);
 
     u_d = 0;
-    psi_d = 0;
-    psi_d_last = 0;
+    r_d = 0;
     testing = 0;
     arduino = 0;
 
@@ -136,9 +136,9 @@ public:
     u_d = _ud -> data;
   }
 
-  void desiredHeadingCallback(const std_msgs::Float64::ConstPtr& _psid)
+  void desiredHeadingCallback(const std_msgs::Float64::ConstPtr& _rd)
   {
-    psi_d = _psid -> data;
+    r_d = _rd -> data;
   }
 
   void insCallback(const geometry_msgs::Pose2D::ConstPtr& _ins)
@@ -177,41 +177,30 @@ public:
       Nr = (-0.52)*pow(pow(u,2) + pow(v,2),0.5);
 
       float g_u = (1 / (m - X_u_dot));
-      float g_psi = (1 / (Iz - N_r_dot));
+      float g_r = (1 / (Iz - N_r_dot));
 
       float f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
-      float f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
+      float f_r = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
 
       float e_u = u_d - u;
-      float e_psi = psi_d - theta;
-      if (std::abs(e_psi) > 3.141592){
-          e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi) - 2*3.141592);
-      }
       e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
       e_u_last = e_u;
 
-      float r_d = (psi_d - psi_d_last) / integral_step;
-      psi_d_last = psi_d;
-      o_dot_dot = (((r_d - o_last) * f1) - (f3 * o_dot_last)) * f2;
-      o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
-      o = (integral_step)*(o_dot + o_dot_last)/2 + o;
-      r_d = o;
-      o_last = o;
-      o_dot_last = o_dot;
-      o_dot_dot_last = o_dot_dot;
-      
-      float e_psi_dot = r_d - r;
-      //float e_psi_dot = 0 - r;
+      float e_r = r_d - r;
+      e_r_int = (integral_step)*(e_r + e_r_last)/2 + e_r_int; //integral of the angular speed error
+      if (e_r < miu_r){
+          e_r_int = 0;
+      }
+      e_r_last = e_r;
 
       float sigma_u = e_u + lambda_u * e_u_int;
-      float sigma_psi = e_psi_dot + lambda_psi * e_psi;
-      //float sigma_psi = 0.1 * e_psi_dot + lambda_psi * e_psi;
+      float sigma_r = e_r + lambda_r * e_r_int;
       
       float sigma_u_abs = std::abs(sigma_u);
-      float sigma_psi_abs = std::abs(sigma_psi);
+      float sigma_r_abs = std::abs(sigma_r);
       
       int sign_u_sm = 0;
-      int sign_psi_sm = 0;
+      int sign_r_sm = 0;
 
       if (Ka_u > kmin_u){
           float signvar = sigma_u_abs - miu_u;
@@ -227,28 +216,28 @@ public:
         Ka_dot_u = kmin_u;
       } 
 
-      if (Ka_psi > kmin_psi){
-        float signvar = sigma_psi_abs - miu_psi;
+      if (Ka_r > kmin_r){
+        float signvar = sigma_r_abs - miu_r;
         if (signvar == 0){
-          sign_psi_sm = 0;
+          sign_r_sm = 0;
         }
         else {
-          sign_psi_sm = copysign(1,signvar);
+          sign_r_sm = copysign(1,signvar);
         }
-        Ka_dot_psi = k_psi * sign_psi_sm;
+        Ka_dot_r = k_r * sign_r_sm;
       }
       else{
-        Ka_dot_psi = kmin_psi;
+        Ka_dot_r = kmin_r;
       }
 
       Ka_u = (integral_step)*(Ka_dot_u + Ka_dot_last_u)/2 + Ka_u; //integral to get the speed adaptative gain
       Ka_dot_last_u = Ka_dot_u;
 
-      Ka_psi = (integral_step)*(Ka_dot_psi + Ka_dot_last_psi)/2 + Ka_psi; //integral to get the heading adaptative gain
-      Ka_dot_last_psi = Ka_dot_psi;
+      Ka_r = (integral_step)*(Ka_dot_r + Ka_dot_last_r)/2 + Ka_r; //integral to get the heading adaptative gain
+      Ka_dot_last_r = Ka_dot_r;
 
       int sign_u = 0;
-      int sign_psi = 0;
+      int sign_r = 0;
 
       if (sigma_u == 0){
         sign_u = 0;
@@ -258,16 +247,16 @@ public:
       }
       ua_u = ((-Ka_u) * pow(sigma_u_abs,0.5) * sign_u) - (k2_u*sigma_u);
 
-      if (sigma_psi == 0){
-        sign_psi = 0;
+      if (sigma_r == 0){
+        sign_r = 0;
       }
       else {
-        sign_psi = copysign(1,sigma_psi);
+        sign_r = copysign(1,sigma_r);
       }
-      ua_psi = ((-Ka_psi) * pow(sigma_psi_abs,0.5) * sign_psi) - (k2_psi*sigma_psi);
+      ua_r = ((-Ka_r) * pow(sigma_r_abs,0.5) * sign_r) - (k2_r*sigma_r);
 
       Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
-      Tz = ((lambda_psi * e_psi_dot) - f_psi - ua_psi) / g_psi; //yaw rate moment
+      Tz = ((lambda_r * e_r) - f_r - ua_r) / g_r; //yaw rate moment
       
       if (Tx > 73){
         Tx = 73;
@@ -287,16 +276,12 @@ public:
         Tz = 0;
         Ka_u = 0;
         Ka_dot_last_u = 0;
-        Ka_psi = 0;
-        Ka_dot_last_psi = 0;
+        Ka_r = 0;
+        Ka_dot_last_r = 0;
         e_u_int = 0;
         e_u_last = 0;
-        o_dot_dot = 0;
-        o_dot = 0;
-        o = 0;
-        o_last = 0;
-        o_dot_last = 0;
-        o_dot_dot_last = 0;
+        e_r_int = 0;
+        e_r_last = 0;
       }
 
       port_t = (Tx / 2) + (Tz / B);
@@ -323,10 +308,10 @@ public:
       std_msgs::Float64 hg;
 
       std_msgs::Float64 eu;
-      std_msgs::Float64 epsi;
+      std_msgs::Float64 er;
 
       std_msgs::Float64 su;
-      std_msgs::Float64 sp;
+      std_msgs::Float64 sr;
 
       geometry_msgs::Pose2D ctrl_input;
 
@@ -334,13 +319,13 @@ public:
       lt.data = port_t;
       
       sg.data = Ka_u;
-      hg.data = Ka_psi;
+      hg.data = Ka_r;
 
       eu.data = e_u;
-      epsi.data = e_psi;
+      er.data = e_r;
 
       su.data = sigma_u;
-      sp.data = sigma_psi;
+      sr.data = sigma_r;
 
       ctrl_input.x = Tx;
       ctrl_input.theta = Tz;
@@ -352,8 +337,8 @@ public:
       speed_error_pub.publish(eu);
       speed_sigma_pub.publish(su);
       heading_gain_pub.publish(hg);
-      heading_error_pub.publish(epsi);
-      heading_sigma_pub.publish(sp);
+      heading_error_pub.publish(er);
+      heading_sigma_pub.publish(sr);
       control_input_pub.publish(ctrl_input);
     }
   }
@@ -382,7 +367,7 @@ private:
 // Main
 int main(int argc, char *argv[])
 {
-  ros::init(argc, argv, "asmc");
+  ros::init(argc, argv, "asmc_speeds");
   AdaptiveSlidingModeControl adaptiveSlidingModeControl;
   int rate = 100;
   ros::Rate loop_rate(rate);
