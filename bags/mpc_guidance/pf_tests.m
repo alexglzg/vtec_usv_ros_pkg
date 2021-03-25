@@ -1,5 +1,5 @@
 %declare name of the bag
-experimentbag = rosbag('straight_2021-03-24-19-49-07.bag')
+experimentbag = rosbag('straight_2021-03-24-22-13-47.bag')
 desiredheading = select(experimentbag, "Topic", '/usv_control/controller/cross_track_error');
 desiredheadingts = timeseries(desiredheading, 'Data');
 start_time = desiredheadingts.get.TimeInfo.Start;
@@ -40,8 +40,14 @@ t = headingts.get.Time - start_time;
 headingdata = headingts.get.Data;
 figure
 plot(t,headingdata)
+hold on
+heading = select(experimentbag, "Topic", '/usv_control/controller/heading_error');
+headingts = timeseries(heading, 'Data');
+t = headingts.get.Time - start_time;
+headingdata = headingts.get.Data;
+plot(t,headingdata)
 hold off
-legend('$\heading sigma$', 'Interpreter', 'latex')
+legend('$\heading sigma$', '$\heading error$', 'Interpreter', 'latex')
 xlabel('Time [s]', 'Interpreter', 'latex') 
 ylabel('$\psi$ [rad]', 'Interpreter', 'latex')
 title('Heading Sigma')
