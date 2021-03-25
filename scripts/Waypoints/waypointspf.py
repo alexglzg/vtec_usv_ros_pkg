@@ -21,7 +21,7 @@ def main():
     t = Test()
     path_array = Float32MultiArray()
     path_array.layout.data_offset = 5
-    path_array.data = [0, 4, 45, 4, 0]
+    path_array.data = [4, -5, 4, 25, 0]
     while not rospy.is_shutdown() and t.testing:
         time.sleep(1)
         start_time = rospy.Time.now().secs

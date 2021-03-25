@@ -21,7 +21,7 @@ class Test:
     def desired(self, _cur):
         self.cur.x = _cur
         self.cur.y = 0
-        self.cur.theta = 0.0
+        self.cur.theta = 0.2
         self.currents_pub.publish(self.cur)
 
 def main():
@@ -41,7 +41,7 @@ def main():
             t.desired(curr)
             i = i + 1
             rate.sleep()
-        bag.close()
+        #bag.close()
         t.desired(0)
         t.testing = False
         rospy.logwarn("Finished")

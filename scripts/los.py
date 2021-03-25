@@ -50,7 +50,7 @@ class LOS:
         self.k = 1
 
         self.speed_equation = 1
-        self.u_max = 1
+        self.u_max = 0.7
         self.u_min = 0.3
         self.threshold_radius = 5
         self.chi_r = 1./self.threshold_radius
