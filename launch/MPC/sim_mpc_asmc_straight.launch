@@ -2,14 +2,14 @@
 
   <include file="$(find sensors)/launch/usv_simulation.launch" />
 
-    <include file="$(find sensors)/launch/asmc_speeds.launch" />
+    <include file="$(find sensors)/launch/asmc.launch" />
 
     <node pkg="sensors" type="waypointspf.py" name="waypoints" />
     <node pkg="sensors" type="waypoints2path" name="waypoints2path" />
 
-    <!--node pkg="sensors" type="currents.py" name="currents" /-->
+    <node pkg="sensors" type="currents.py" name="currents" />
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/mpc_guidance/straight" />
+    <!--node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/mpc_guidance/straight" /-->
 
 </launch>

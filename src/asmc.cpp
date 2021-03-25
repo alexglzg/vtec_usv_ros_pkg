@@ -29,13 +29,13 @@ public:
   //Tracking variables
   float u_d;
   float psi_d;
+  float r_d_callback;
+  int is_cb;
   float r_d;
 
   //Auxiliry variables
   float e_u_int;
   float e_u_last;
-  float e_r_int;
-  float e_r_last;
   float psi_d_last;
 
   //Model pysical parameters
@@ -98,7 +98,8 @@ public:
     
     //ROS Subscribers
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &AdaptiveSlidingModeControl::desiredSpeedCallback, this);
-    desired_heading_sub = n.subscribe("/guidance/desired_r", 1000, &AdaptiveSlidingModeControl::desiredHeadingCallback, this);
+    desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, &AdaptiveSlidingModeControl::desiredHeadingCallback, this);
+    desired_r_sub = n.subscribe("/guidance/desired_r", 1000, &AdaptiveSlidingModeControl::desiredRCallback, this);
     ins_pose_sub = n.subscribe("/vectornav/ins_2d/ins_pose", 1000, &AdaptiveSlidingModeControl::insCallback, this);
     local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, &AdaptiveSlidingModeControl::velocityCallback, this);
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSlidingModeControl::flagCallback, this);
@@ -129,8 +130,10 @@ public:
     u_d = 0;
     psi_d = 0;
     psi_d_last = 0;
+    r_d_callback = 0;
     testing = 0;
     arduino = 0;
+    is_cb = 0;
 
   }
 
@@ -141,7 +144,13 @@ public:
 
   void desiredHeadingCallback(const std_msgs::Float64::ConstPtr& _psid)
   {
-    r_d = _psid -> data;
+    psi_d = _psid -> data;
+  }
+
+  void desiredRCallback(const std_msgs::Float64::ConstPtr& _rd)
+  {
+    r_d_callback = _rd -> data;
+    is_cb = 1;
   }
 
   void insCallback(const geometry_msgs::Pose2D::ConstPtr& _ins)
@@ -186,31 +195,34 @@ public:
       float f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
 
       float e_u = u_d - u;
-      /*float e_psi = psi_d - theta;
+      float e_psi = psi_d - theta;
       if (std::abs(e_psi) > 3.141592){
           e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi) - 2*3.141592);
-      }*/
+      }
       e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
       e_u_last = e_u;
-      float e_r = r_d - r;
-      e_r_int = (integral_step)*(e_r + e_r_last)/2 + e_r_int; //integral of the surge speed error
-      e_r_last = e_r;
-      /*float r_d = (psi_d - psi_d_last) / integral_step;
-      psi_d_last = psi_d;
-      o_dot_dot = (((r_d - o_last) * f1) - (f3 * o_dot_last)) * f2;
-      o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
-      o = (integral_step)*(o_dot + o_dot_last)/2 + o;
-      r_d = o;
-      o_last = o;
-      o_dot_last = o_dot;
-      o_dot_dot_last = o_dot_dot;
-      
+
+      //float r_d = r_d_callback;
+      //if (is_cb == 0){
+        float d_psi_d = psi_d - psi_d_last;
+        if (std::abs(d_psi_d) > 2*3.141592){
+            d_psi_d = (d_psi_d/std::abs(d_psi_d))*(std::abs(d_psi_d) - 2*3.141592);
+        }
+        r_d = (d_psi_d) / integral_step;
+        psi_d_last = psi_d;
+        o_dot_dot = (((r_d - o_last) * f1) - (f3 * o_dot_last)) * f2;
+        o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
+        o = (integral_step)*(o_dot + o_dot_last)/2 + o;
+        r_d = o;
+        o_last = o;
+        o_dot_last = o_dot;
+        o_dot_dot_last = o_dot_dot;
+      //}
+
       float e_psi_dot = r_d - r;
-      //float e_psi_dot = 0 - r;*/
 
       float sigma_u = e_u + lambda_u * e_u_int;
-      float sigma_psi = e_r + lambda_psi * e_r_int; //e_psi_dot + lambda_psi * e_psi;
-      //float sigma_psi = 0.1 * e_psi_dot + lambda_psi * e_psi;
+      float sigma_psi = e_psi_dot + lambda_psi * e_psi;
       
       float sigma_u_abs = std::abs(sigma_u);
       float sigma_psi_abs = std::abs(sigma_psi);
@@ -272,7 +284,7 @@ public:
       ua_psi = ((-Ka_psi) * pow(sigma_psi_abs,0.5) * sign_psi) - (k2_psi*sigma_psi);
 
       Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
-      Tz = ((lambda_psi * e_r) - f_psi - ua_psi) / g_psi; //yaw rate moment
+      Tz = ((lambda_psi * e_psi_dot) - f_psi - ua_psi) / g_psi; //yaw rate moment
       
       if (Tx > 73){
         Tx = 73;
@@ -296,15 +308,15 @@ public:
         Ka_dot_last_psi = 0;
         e_u_int = 0;
         e_u_last = 0;
-        e_r_int = 0;
-        e_r_last = 0;
         o_dot_dot = 0;
         o_dot = 0;
         o = 0;
         o_last = 0;
         o_dot_last = 0;
         o_dot_dot_last = 0;
+        is_cb = 0;
       }
+      //is_cb = 0;
 
       port_t = (Tx / 2) + (Tz / B);
       starboard_t = (Tx / (2*c)) - (Tz / (B*c));
@@ -344,7 +356,7 @@ public:
       hg.data = Ka_psi;
 
       eu.data = e_u;
-      epsi.data = e_r;
+      epsi.data = e_psi;
 
       su.data = sigma_u;
       sp.data = sigma_psi;
@@ -380,6 +392,7 @@ private:
 
   ros::Subscriber desired_speed_sub;
   ros::Subscriber desired_heading_sub;
+  ros::Subscriber desired_r_sub;
   ros::Subscriber ins_pose_sub;
   ros::Subscriber local_vel_sub;
   ros::Subscriber flag_sub;
