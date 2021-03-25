@@ -1,5 +1,5 @@
 %declare name of the bag
-experimentbag = rosbag('zz_2021-03-24-09-08-01.bag')
+experimentbag = rosbag('straight_2021-03-24-20-14-40.bag')
 desiredheading = select(experimentbag, "Topic", '/usv_control/controller/left_thruster');
 desiredheadingts = timeseries(desiredheading, 'Data');
 start_time = desiredheadingts.get.TimeInfo.Start;
@@ -14,7 +14,7 @@ plot(t,cross_error_data)
 legend('$Y_{e}$', 'Interpreter', 'latex')
 xlabel('Time [s]', 'Interpreter', 'latex') 
 ylabel('$Y_{e}$ [m]', 'Interpreter', 'latex')
-cross_error_data = cross_error_data(400:3000);
+cross_error_data = cross_error_data(400:2699);
 mae1 = mae(cross_error_data);
 mse1 = mse(cross_error_data);
 disp("cross error MPC");

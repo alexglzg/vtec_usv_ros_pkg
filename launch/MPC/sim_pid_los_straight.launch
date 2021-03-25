@@ -11,7 +11,9 @@
 
     <node pkg="sensors" type="pid" name="pid" />
 
+    <node pkg="sensors" type="currents.py" name="currents" />
+
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/los_pid/pid_zz" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/los_pid/pid_straigth" />
 
 </launch>

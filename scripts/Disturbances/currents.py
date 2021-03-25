@@ -21,7 +21,7 @@ class Test:
     def desired(self, _cur):
         self.cur.x = _cur
         self.cur.y = 0
-        self.cur.theta = 0.2
+        self.cur.theta = -0.2
         self.currents_pub.publish(self.cur)
 
 def main():
@@ -36,7 +36,7 @@ def main():
         start_time = rospy.Time.now().secs
         i = 0
         while (not rospy.is_shutdown()) and (i < len(currents)):
-            curr = currents[i]*1.5
+            curr = currents[i]*4.0
             #bag.write('curr', curr)
             t.desired(curr)
             i = i + 1

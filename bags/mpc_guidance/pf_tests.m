@@ -1,5 +1,5 @@
 %declare name of the bag
-experimentbag = rosbag('zz_2021-03-24-13-47-06.bag')
+experimentbag = rosbag('straight_2021-03-24-19-49-07.bag')
 desiredheading = select(experimentbag, "Topic", '/usv_control/controller/cross_track_error');
 desiredheadingts = timeseries(desiredheading, 'Data');
 start_time = desiredheadingts.get.TimeInfo.Start;

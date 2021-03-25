@@ -1,5 +1,5 @@
 %declare name of the bag
-experimentbag = rosbag('pid_zz_2021-03-24-09-10-25.bag')
+experimentbag = rosbag('pid_straigth_2021-03-24-20-13-48.bag')
 desiredheading = select(experimentbag, "Topic", '/guidance/ye');
 desiredheadingts = timeseries(desiredheading, 'Data');
 start_time = desiredheadingts.get.TimeInfo.Start;
