@@ -1,0 +1,13 @@
+<launch>
+
+    <node pkg="sensors" type="ins_2d" name="ins_2d" />
+
+    <include file="$(find sensors)/launch/pid.launch" />
+
+    <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
+
+    <node pkg="sensors" type="trial_1.py" name="trial_1" />
+
+    <node pkg="rosserial_python" type="serial_node.py" name="serial_node" args = "/dev/ttyUSB1" />
+
+</launch>
