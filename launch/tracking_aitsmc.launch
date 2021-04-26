@@ -1,0 +1,35 @@
+<launch>
+
+    <node name="tracking_aitsmc" pkg="sensors" type="tracking_aitsmc" >
+    <param name = "k_x" value = "0.05" />
+	<param name = "k_y" value = "0.05" />
+	<param name = "kmin_x" value = "0.01" />
+	<param name = "kmin_y" value = "0.01" />
+	<param name = "k2_x" value = "0.01" />
+    <param name = "k2_y" value = "0.01" />
+	<param name = "mu_x" value = "0.05" />
+	<param name = "mu_y" value = "0.05" />
+	<param name = "tc_x" value = "20" />
+	<param name = "tc_y" value = "20" />
+    <param name = "q_x" value = "3" />
+	<param name = "q_y" value = "3" />
+    <param name = "p_x" value = "5" />
+	<param name = "p_y" value = "5" />
+
+    <param name = "k_u" value = "0.1" />
+	<param name = "k_r" value = "0.2" />
+	<param name = "kmin_u" value = "0.01" />
+	<param name = "kmin_r" value = "0.01" />
+	<param name = "k2_u" value = "0.01" />
+    <param name = "k2_r" value = "0.01" />
+	<param name = "mu_u" value = "0.02" />
+	<param name = "mu_r" value = "0.02" />
+	<param name = "tc_u" value = "2" />
+	<param name = "tc_r" value = "2" />
+    <param name = "q_u" value = "3" />
+	<param name = "q_r" value = "3" />
+    <param name = "p_u" value = "5" />
+	<param name = "p_r" value = "5" />
+    </node>
+
+</launch>
