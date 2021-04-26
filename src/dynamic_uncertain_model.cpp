@@ -50,7 +50,7 @@ public:
 	static const float m = 30; //mass
 	static const float Iz = 4.1; //moment of inertia
 	static const float B = 0.41; //centerline-to-centerline separation
-	static const float c = 1.0;//0.78; //thruster correction factor
+	static const float c = 0.78; //thruster correction factor
 
 	tf2::Quaternion myQuaternion;
 
@@ -301,10 +301,10 @@ private:
 //Main
 int main(int argc, char *argv[])
 {
-	ros::init(argc, argv, "uncertain_model");
+	ros::init(argc, argv, "dynamic_uncertain_model");
 	DynamicModel dynamicModel;
-	dynamicModel.integral_step = 0.001;
-	int rate = 1000;
+	dynamicModel.integral_step = 0.01;
+	int rate = 100;
 	ros::Rate loop_rate(rate);
 
   while (ros::ok())

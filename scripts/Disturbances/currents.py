@@ -41,7 +41,7 @@ def main():
             t.desired(curr)
             i = i + 1
             rate.sleep()
-        bag.close()
+        #bag.close()
         t.desired(0)
         t.testing = False
         rospy.logwarn("Finished")
