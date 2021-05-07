@@ -60,7 +60,7 @@ def main():
         start_time = rospy.Time.now().secs
         i = 0
         while (not rospy.is_shutdown()) and (i < xd.shape[1]):
-            x = xd[0,i]
+            x = xd[0,i] - 2
             y = yd[0,i]
             xdot = xddot[0,i]
             ydot = yddot[0,i]
