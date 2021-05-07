@@ -1,0 +1,19 @@
+<launch>
+
+    <node name="tracking_aitsmc" pkg="sensors" type="tracking_aitsmc" >
+    <param name = "Ka_x" value = "1.0" />
+	<param name = "Ka_y" value = "1.0" />
+	<param name = "k2_x" value = "0.5" />
+    <param name = "k2_y" value = "0.5" />
+    <param name = "lambda_x" value = "0.05" />
+	<param name = "lambda_y" value = "0.05" />
+
+    <param name = "Ka_u" value = "1.0" />
+	<param name = "Ka_r" value = "1.0" />
+	<param name = "k2_u" value = "1.0" />
+    <param name = "k2_r" value = "1.0" />
+    <param name = "lambda_u" value = "0.01" />
+	<param name = "lambda_r" value = "0.01" />
+    </node>
+
+</launch>

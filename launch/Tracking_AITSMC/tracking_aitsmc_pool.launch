@@ -1,0 +1,16 @@
+<launch>
+
+    <node pkg="sensors" type="ins_2d" name="ins_2d" />
+
+    <include file="$(find sensors)/launch/tracking_aitsmc.launch" />
+
+    <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
+
+    <node pkg="sensors" type="pool_infinity_trajectory.py" name="pool_infinity_trajectory" />
+
+    <node pkg="rosserial_python" type="serial_node.py" name="serial_node" args = "/dev/ttyUSB1" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_aitsmc/pool" />
+
+</launch>
