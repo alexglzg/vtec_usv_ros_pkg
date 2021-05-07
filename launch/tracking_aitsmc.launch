@@ -9,8 +9,8 @@
     <param name = "k2_y" value = "0.01" />
 	<param name = "mu_x" value = "0.05" />
 	<param name = "mu_y" value = "0.05" />
-	<param name = "tc_x" value = "20" />
-	<param name = "tc_y" value = "20" />
+	<param name = "tc_x" value = "12" />
+	<param name = "tc_y" value = "12" />
     <param name = "q_x" value = "3" />
 	<param name = "q_y" value = "3" />
     <param name = "p_x" value = "5" />
