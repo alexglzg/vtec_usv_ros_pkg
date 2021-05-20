@@ -16,7 +16,7 @@ sensor_msgs
 tf2
 tf2_ros
 tf2_geometry_msgs
-gazebo_ros
+#gazebo_ros
 )
 
 #Eigen libs
@@ -228,7 +228,7 @@ add_executable(pid src/pid.cpp)
 add_executable(pid_fl src/pid_fl.cpp)
 add_executable(adaptive_super_twisting src/adaptive_super_twisting.cpp)
 add_executable(super_twisting src/super_twisting.cpp)
-add_executable(boat_gazebo_broadcaster src/boat_gazebo_broadcaster.cpp)
+#add_executable(boat_gazebo_broadcaster src/boat_gazebo_broadcaster.cpp)
 add_executable(fixed_time_asmc src/fixed_time_asmc.cpp)
 target_link_libraries(ins_2d ${catkin_LIBRARIES})
 target_link_libraries(ins_2d PRIVATE libvncxx)
@@ -249,5 +249,5 @@ target_link_libraries(pid ${catkin_LIBRARIES})
 target_link_libraries(pid_fl ${catkin_LIBRARIES})
 target_link_libraries(adaptive_super_twisting ${catkin_LIBRARIES})
 target_link_libraries(super_twisting ${catkin_LIBRARIES})
-target_link_libraries(boat_gazebo_broadcaster ${catkin_LIBRARIES})
+#target_link_libraries(boat_gazebo_broadcaster ${catkin_LIBRARIES})
 target_link_libraries(fixed_time_asmc ${catkin_LIBRARIES})
