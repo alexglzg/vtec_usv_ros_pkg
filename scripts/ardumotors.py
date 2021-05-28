@@ -67,6 +67,8 @@ class Motors:
                 power_left: Newtons value of the left thruster
         @return: --
         '''
+        pwm_right = 0
+        pwm_left = 0
         if (power_right < self.min_thrust or power_right > self.max_thrust or power_left < self.min_thrust or power_left > self.max_thrust):
             rospy.logwarn("Saturation range")
             pwm_right = power_right * 0.5
