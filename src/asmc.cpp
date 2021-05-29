@@ -190,7 +190,11 @@ public:
       e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
       e_u_last = e_u;
 
-      float r_d = (psi_d - psi_d_last) / integral_step;
+      float psi_d_dif = psi_d - psi_d_last;
+      if (std::abs(psi_d_dif) > 3.141592){
+          psi_d_dif = (psi_d_dif/std::abs(psi_d_dif))*(std::abs(psi_d_dif) - 2*3.141592);
+      }
+      float r_d = (psi_d_dif) / integral_step;
       psi_d_last = psi_d;
       o_dot_dot = (((r_d - o_last) * f1) - (f3 * o_dot_last)) * f2;
       o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
@@ -297,6 +301,8 @@ public:
         o_last = 0;
         o_dot_last = 0;
         o_dot_dot_last = 0;
+        psi_d = theta;
+        psi_d_last = theta;
       }
 
       port_t = (Tx / 2) + (Tz / B);
