@@ -8,6 +8,6 @@
     <include file="$(find sensors)/launch/usv_simulation.launch" />
 
     <!--Launch rosbag to record topics -->
-    <!--node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_aitsmc/pool" /-->
+    <!--node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_aitsmc/sim" /-->
 
 </launch>

@@ -79,7 +79,7 @@ public:
     //ROS Subscribers
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &SuperTwistingControl::desiredSpeedCallback, this);
     desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, &SuperTwistingControl::desiredHeadingCallback, this);
-    ins_pose_sub = n.subscribe("/vectornav/ins_2d/ins_pose", 1000, &SuperTwistingControl::insCallback, this);
+    ins_pose_sub = n.subscribe("/vectornav/ins_2d/NED_pose", 1000, &SuperTwistingControl::insCallback, this);
     local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, &SuperTwistingControl::velocityCallback, this);
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &SuperTwistingControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &SuperTwistingControl::arduinoCallback, this);
