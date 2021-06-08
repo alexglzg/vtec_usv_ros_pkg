@@ -9,6 +9,6 @@
     <node pkg="sensors" type="pool_infinity_trajectory.py" name="pool_infinity_trajectory" />
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_aitsmc/pool" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_aitsmc/payload_pool" />
 
 </launch>
