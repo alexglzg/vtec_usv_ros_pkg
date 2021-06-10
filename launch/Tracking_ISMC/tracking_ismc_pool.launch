@@ -9,6 +9,6 @@
     <include file="$(find sensors)/launch/ardumotors.launch" />
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_ismc/payload_pool" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_ismc/pool" />
 
 </launch>
