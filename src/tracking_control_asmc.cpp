@@ -40,6 +40,7 @@ public:
   float psi_d;
   float r_d;
   float past_psi_d;
+  float psi_d_dif;
 
   //Auxiliry variables
   float e_x;
@@ -233,7 +234,11 @@ public:
       e_x = (x_d + l*cos(psi_d)) - (x + l*cos(psi));
       e_y = (y_d + l*sin(psi_d)) - (y + l*sin(psi));
 
-      r_d = (psi_d - past_psi_d)/integral_step;
+      psi_d_dif = psi_d - past_psi_d;
+      if (std::abs(psi_d_dif) > 3.141592){
+          psi_d_dif = (psi_d_dif/std::abs(psi_d_dif))*(std::abs(psi_d_dif) - 2*3.141592);
+      }
+      r_d = (psi_d_dif)/integral_step;
       e_x_dot = xdot_d - l*sin(psi_d)*r_d - (u*cos(psi) - v*sin(psi) - l*sin(psi)*r);
       e_y_dot = ydot_d + l*cos(psi_d)*r_d - (u*sin(psi) + v*cos(psi) + l*cos(psi)*r);
       past_psi_d = psi_d;
