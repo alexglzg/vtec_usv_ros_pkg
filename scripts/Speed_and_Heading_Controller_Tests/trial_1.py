@@ -60,7 +60,7 @@ def main():
     y = Float64()
     r = Float64()
     e = Float64()
-    time.sleep(2)
+    time.sleep(10)
     if t.testing:
         start_time = rospy.Time.now().secs
         i = 0

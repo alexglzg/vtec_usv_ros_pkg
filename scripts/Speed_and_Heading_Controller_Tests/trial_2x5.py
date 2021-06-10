@@ -63,21 +63,30 @@ def main():
     y = Float64()
     r = Float64()
     e = Float64()
-    time.sleep(2)
+    r_f = 0.0 #Filtered reference
+    r_dot = 0.0
+    r_dot_last = 0.0
+    a = 10.0
+    b = 10.0
+    time_step = 0.01
+    time.sleep(10)
     if t.testing:
         start_time = rospy.Time.now().secs
         i = 0
         while (not rospy.is_shutdown()) and (i < len(profile)):
             if (t.flag != 0) and (t.arduino != 0):
+                r_dot = b*profile[i] - a*r_f
+                r_f = time_step*(r_dot + r_dot_last)/2 + r_f
+                r_dot_last = r_dot
                 u.data = t.control_input
                 y.data = t.velocity
-                r.data = profile[i]
+                r.data = r_f
                 e.data = r.data - y.data
                 bag.write('u', u)
                 bag.write('y', y)
                 bag.write('r', r)
                 bag.write('e', e)
-                t.desired(profile[i])
+                t.desired(r_f)
                 i = i + 1
             rate.sleep()
         bag.close()
