@@ -1,0 +1,14 @@
+<launch>
+
+    <include file="$(find vectornav)/launch/vectornav.launch" />
+
+    <include file="$(find sensors)/launch/tracking_asmc.launch" />
+
+    <include file="$(find sensors)/launch/ardumotors.launch" />
+
+    <node pkg="sensors" type="heterogeneous_pool_infinity_trajectory.py" name="heterogeneous_pool_infinity_trajectory" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_asmc/pool" />
+
+</launch>

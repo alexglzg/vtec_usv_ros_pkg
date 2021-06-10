@@ -1,0 +1,13 @@
+<launch>
+
+
+    <include file="$(find sensors)/launch/tracking_asmc.launch" />
+
+    <node pkg="sensors" type="heterogeneous_pool_infinity_trajectory.py" name="heterogeneous_pool_infinity_trajectory" />
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <!--Launch rosbag to record topics -->
+    <!--node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_asmc/sim" /-->
+
+</launch>

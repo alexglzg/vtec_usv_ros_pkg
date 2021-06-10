@@ -38,6 +38,8 @@ public:
   float xdot_d;
   float ydot_d;
   float psi_d;
+  float r_d;
+  float past_psi_d;
 
   //Auxiliry variables
   float e_x;
@@ -151,16 +153,16 @@ public:
     static const float dlambda_x = 1.0;
     static const float dlambda_y = 1.0;
 
-    n.param("/tracking_asmc/k_x", k_x, dk_x);
-    n.param("/tracking_asmc/k_y", k_y, dk_y);
-    n.param("/tracking_asmc/kmin_x", kmin_x, dkmin_x);
-    n.param("/tracking_asmc/kmin_y", kmin_y, dkmin_y);
-    n.param("/tracking_asmc/k2_x", k2_x, dk2_x);
-    n.param("/tracking_asmc/k2_y", k2_y, dk2_y);
-    n.param("/tracking_asmc/mu_x", mu_x, dmu_x);
-    n.param("/tracking_asmc/mu_y", mu_y, dmu_y);
-    n.param("/tracking_asmc/lambda_x", lambda_x, dlambda_x);
-    n.param("/tracking_asmc/lambda_y", lambda_y, dlambda_y);
+    n.param("/tracking_control_asmc/k_x", k_x, dk_x);
+    n.param("/tracking_control_asmc/k_y", k_y, dk_y);
+    n.param("/tracking_control_asmc/kmin_x", kmin_x, dkmin_x);
+    n.param("/tracking_control_asmc/kmin_y", kmin_y, dkmin_y);
+    n.param("/tracking_control_asmc/k2_x", k2_x, dk2_x);
+    n.param("/tracking_control_asmc/k2_y", k2_y, dk2_y);
+    n.param("/tracking_control_asmc/mu_x", mu_x, dmu_x);
+    n.param("/tracking_control_asmc/mu_y", mu_y, dmu_y);
+    n.param("/tracking_control_asmc/lambda_x", lambda_x, dlambda_x);
+    n.param("/tracking_control_asmc/lambda_y", lambda_y, dlambda_y);
 
     g_u = (1 / (m - X_u_dot));
     g_r = (1 / (Iz - N_r_dot));
@@ -169,6 +171,7 @@ public:
     testing = 0;
     arduino = 0;
     starting = 0;
+    past_psi_d = 0;
 
   }
 
@@ -230,8 +233,10 @@ public:
       e_x = (x_d + l*cos(psi_d)) - (x + l*cos(psi));
       e_y = (y_d + l*sin(psi_d)) - (y + l*sin(psi));
 
-      e_x_dot = xdot_d - (u*cos(psi) - v*sin(psi));
-      e_y_dot = ydot_d - (u*sin(psi) + v*cos(psi));
+      r_d = (psi_d - past_psi_d)/integral_step;
+      e_x_dot = xdot_d - l*sin(psi_d)*r_d - (u*cos(psi) - v*sin(psi) - l*sin(psi)*r);
+      e_y_dot = ydot_d + l*cos(psi_d)*r_d - (u*sin(psi) + v*cos(psi) + l*cos(psi)*r);
+      past_psi_d = psi_d;
 
       s_x = e_x_dot + lambda_x*e_x;
       s_y = e_y_dot + lambda_y*e_y;
@@ -328,6 +333,7 @@ public:
         Ka_dot_last_x = 0;
         Ka_y = kmin_y;
         Ka_dot_last_y = 0;
+        past_psi_d = 0;
       }
 
       port_t = (Tx / 2) + (Tz / B);

@@ -1,0 +1,27 @@
+<launch>
+
+    <node name="tracking_asmc" pkg="sensors" type="tracking_asmc" >
+    <param name = "k_x" value = "0.01" />
+	<param name = "k_y" value = "0.01" />
+	<param name = "kmin_x" value = "0.001" />
+	<param name = "kmin_y" value = "0.001" />
+	<param name = "k2_x" value = "0.001" />
+    <param name = "k2_y" value = "0.001" />
+	<param name = "mu_x" value = "0.2" />
+	<param name = "mu_y" value = "0.2" />
+    <param name = "lambda_x" value = "0.001" />
+	<param name = "lambda_y" value = "0.001" />
+
+    <param name = "k_u" value = "0.1" />
+	<param name = "k_r" value = "0.1" />
+	<param name = "kmin_u" value = "0.01" />
+	<param name = "kmin_r" value = "0.01" />
+	<param name = "k2_u" value = "0.01" />
+    <param name = "k2_r" value = "0.01" />
+	<param name = "mu_u" value = "0.1" />
+	<param name = "mu_r" value = "0.1" />
+    <param name = "lambda_u" value = "0.001" />
+	<param name = "lambda_r" value = "0.001" />
+    </node>
+
+</launch>
