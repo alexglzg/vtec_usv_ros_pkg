@@ -47,23 +47,23 @@ def main():
     rate = rospy.Rate(100)
     t = Test()
     dir_name = os.path.dirname(__file__)
-    xd = sio.loadmat(dir_name + '/mat/pool_xd.mat')
+    xd = sio.loadmat(dir_name + '/mat/traj2/pool_xd.mat')
     xd = xd['data']
-    yd = sio.loadmat(dir_name + '/mat/pool_yd.mat')
+    yd = sio.loadmat(dir_name + '/mat/traj2/pool_yd.mat')
     yd = yd['data']
-    xddot = sio.loadmat(dir_name + '/mat/pool_xddot.mat')
+    xddot = sio.loadmat(dir_name + '/mat/traj2/pool_xddot.mat')
     xddot = xddot['data']
-    yddot = sio.loadmat(dir_name + '/mat/pool_yddot.mat')
+    yddot = sio.loadmat(dir_name + '/mat/traj2/pool_yddot.mat')
     yddot = yddot['data']
     time.sleep(8)
     if t.testing:
         start_time = rospy.Time.now().secs
         i = 0
         while (not rospy.is_shutdown()) and (i < xd.shape[1]):
-            x = xd[0,i] - 3.5
-            y = yd[0,i] + 1.5
-            xdot = xddot[0,i]
-            ydot = yddot[0,i]
+            x = (xd[0,i] - 2)*2/3 + 0.5
+            y = (yd[0,i] + 12)*6/10 - 7
+            xdot = (xddot[0,i])*2/3
+            ydot = yddot[0,i]*6/10
             if i < 2:
                 s = 1
             else:
