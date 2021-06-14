@@ -1,0 +1,9 @@
+<launch>
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <include file="$(find sensors)/launch/pid.launch" />
+
+    <node pkg="sensors" type="trial_2.py" name="trial_2" />
+
+</launch>
