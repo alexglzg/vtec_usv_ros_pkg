@@ -9,6 +9,8 @@ import scipy.io as sio
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Float64, UInt8
 
+trajectory = rospy.get_param("pool_infinity_trajectory/trajectory", 'traj0')
+
 #Variable Speed and Variable Heading
 #Experiment 1 velocity profile for data driven optimization
 class Test:
@@ -47,20 +49,20 @@ def main():
     rate = rospy.Rate(100)
     t = Test()
     dir_name = os.path.dirname(__file__)
-    xd = sio.loadmat(dir_name + '/mat/pool_xd.mat')
+    xd = sio.loadmat(dir_name + '/mat/' + trajectory + '/pool_xd.mat')
     xd = xd['data']
-    yd = sio.loadmat(dir_name + '/mat/pool_yd.mat')
+    yd = sio.loadmat(dir_name + '/mat/' + trajectory + '/pool_yd.mat')
     yd = yd['data']
-    xddot = sio.loadmat(dir_name + '/mat/pool_xddot.mat')
+    xddot = sio.loadmat(dir_name + '/mat/' + trajectory + '/pool_xddot.mat')
     xddot = xddot['data']
-    yddot = sio.loadmat(dir_name + '/mat/pool_yddot.mat')
+    yddot = sio.loadmat(dir_name + '/mat/' + trajectory + '/pool_yddot.mat')
     yddot = yddot['data']
     time.sleep(8)
     if t.testing:
         start_time = rospy.Time.now().secs
         i = 0
         while (not rospy.is_shutdown()) and (i < xd.shape[1]):
-            x = xd[0,i] - 2
+            x = xd[0,i]
             y = yd[0,i]
             xdot = xddot[0,i]
             ydot = yddot[0,i]

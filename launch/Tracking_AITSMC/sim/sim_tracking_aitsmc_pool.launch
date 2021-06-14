@@ -3,7 +3,9 @@
 
     <include file="$(find sensors)/launch/tracking_aitsmc.launch" />
 
-    <node pkg="sensors" type="pool_infinity_trajectory.py" name="pool_infinity_trajectory" />
+    <node name="pool_infinity_trajectory" pkg="sensors" type="pool_infinity_trajectory.py" >
+	<param name = "trajectory" value = 'traj2' />
+    </node>
 
     <include file="$(find sensors)/launch/usv_simulation.launch" />
 
