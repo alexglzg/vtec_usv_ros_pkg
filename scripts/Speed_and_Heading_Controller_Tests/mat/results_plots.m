@@ -22,7 +22,16 @@ error_ts = timeseries(error, 'Data');
 error_data = error_ts.get.Data;
 
 %Visualize
+%Reference vs response
 figure
-plot(reference_ts)
+start_time = reference_ts.get.TimeInfo.Start;
+t = reference_ts.get.Time - start_time;
+plot(t,reference_data)
 hold on
-plot(velocity_ts)
+plot(t,velocity_data)
+%Control input
+figure
+plot(t,ctrl_input_data)
+%Tracking error
+figure
+plot(t,error_data)

@@ -42,11 +42,11 @@ public:
   static const float c = 1.0;//0.78;
 
   //Controller gains
-  static const float kp_u = 80.0;
-  static const float kd_u = 40.0;
-  static const float ki_u = 50.0;
-  static const float kp_psi = 45.0;
-  static const float kd_psi = 45.0;
+  float kp_u;
+  float kd_u;
+  float ki_u;
+  float kp_psi;
+  float kd_psi;
     
   float o_dot_dot;
   float o_dot;
@@ -88,6 +88,18 @@ public:
     local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, &ProportionalIntegralDerivative::velocityCallback, this);
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &ProportionalIntegralDerivative::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &ProportionalIntegralDerivative::arduinoCallback, this);
+
+    static const float dkp_u = 80.0;
+    static const float dkd_u = 40.0;
+    static const float dki_u = 50.0;
+    static const float dkp_psi = 45.0;
+    static const float dkd_psi = 45.0;
+
+    n.param("/pid/kp_u", kp_u, dkp_u);
+    n.param("/pid/kd_u", kd_u, dkd_u);
+    n.param("/pid/ki_u", ki_u, dki_u);
+    n.param("/pid/kp_psi", kp_psi, dkp_psi);
+    n.param("/pid/kd_psi", kd_psi, dkd_psi);
 
     u_d = 0;
     psi_d = 0;

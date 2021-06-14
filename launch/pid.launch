@@ -1,0 +1,11 @@
+<launch>
+
+    <node name="pid" pkg="sensors" type="pid" >
+	<param name = "kp_u" value = "80.0" />
+	<param name = "kp_psi" value = "45.0" />
+	<param name = "kd_u" value = "40.0" />
+	<param name = "kd_psi" value = "45.0" />
+	<param name = "ki_u" value = "50.0" />
+    </node>
+
+</launch>
