@@ -7,7 +7,7 @@
     <include file="$(find sensors)/launch/ardumotors.launch" />
 
     <node name="pool_infinity_trajectory" pkg="sensors" type="pool_infinity_trajectory.py" >
-	<param name = "trajectory" value = "traj0" />
+	<param name = "trajectory" value = "traj2" />
     </node>
 
     <!--Launch rosbag to record topics -->
