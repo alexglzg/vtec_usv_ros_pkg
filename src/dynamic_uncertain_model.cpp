@@ -99,9 +99,9 @@ public:
 		disturbance_sub = n.subscribe("/usv_disturbance", 1000, &DynamicModel::dist_callback, this);
         currents_sub = n.subscribe("/usv_currents", 1000, &DynamicModel::currents_callback, this);
 
-		upsilon << 0.02, 0.03, 0.05;
+		upsilon << 0.00, 0.00, 0.00;
 		upsilon_dot_last << 0.00, 0.00, 0.00;
-		eta << 1.77, -1.38, -0.84;
+		eta << 0.00, 0.00, 0.00;
 		eta_dot_last << 0.00, 0.00, 0.00;
         nu_c << 0.00, 0.00, 0.00;
         nu_r << 0.00, 0.00, 0.00;
