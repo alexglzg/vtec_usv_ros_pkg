@@ -2,7 +2,7 @@
 
     <include file="$(find sensors)/launch/usv_simulation.launch" />
 
-    <include file="$(find sensors)/launch/pid.launch" />
+    <node pkg="usvspeedcontroller" type="usvspeedcontroller_node" name="usvspeedcontroller_node" />
 
     <node pkg="sensors" type="trial_2x5.py" name="trial_2x5" />
 

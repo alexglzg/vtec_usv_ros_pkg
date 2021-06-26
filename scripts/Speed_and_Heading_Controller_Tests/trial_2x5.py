@@ -70,6 +70,7 @@ def main():
     b = 20.0
     time_step = 0.01
     time.sleep(10)
+    rospy.logwarn("Starting")
     if t.testing:
         start_time = rospy.Time.now().secs
         i = 0
