@@ -36,8 +36,9 @@ def main():
     rospy.init_node('cu_cr', anonymous=False)
     rate = rospy.Rate(100) # 100hz
     t = Test()
-    time.sleep(8)
+    time.sleep(10)
     flag = 0
+    rospy.logwarn("Starting")
     while not rospy.is_shutdown() and t.testing:
         start_time = rospy.Time.now().secs
         while (rospy.Time.now().secs - start_time) <= 10 and not rospy.is_shutdown():

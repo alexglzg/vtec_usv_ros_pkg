@@ -6,26 +6,26 @@
 
     <node name="cu_cr" pkg="sensors" type="cu_cr.py" >
         <param name = "desired_u" value = "0.7" />
-        <param name = "desired_r" value = "8" />
+        <param name = "desired_r" value = "12" />
     </node>
 
     <node name="finite_time_asmc" pkg="sensors" type="finite_time_asmc" >
 		<param name = "K2_u" value = "0.01" />
 		<param name = "K2_r" value = "0.01" />
-		<param name = "mu_u" value = "0.1" />
-		<param name = "mu_r" value = "0.1" />
+		<param name = "mu_u" value = "0.05" />
+		<param name = "mu_r" value = "0.05" />
 		<param name = "lambda_u" value = "0.001" />
 		<param name = "lambda_r" value = "0.001" />
 		<param name = "L1_u" value = "0.15" />
 		<param name = "L1_r" value = "0.15" />
 		<param name = "t_c" value = "3" />
-		<param name = "k_u" value = "0.1" />
-		<param name = "k_r" value = "0.1" />
+		<param name = "k_u" value = "0.2" />
+		<param name = "k_r" value = "0.2" />
 		<param name = "Kmin_u" value = "0.01" />
 		<param name = "Kmin_r" value = "0.01" />
     </node>
 
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/finite_time/pay_u_07_r_pi8" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/finite_time/pay_u_07_r_pi12" />
 
 </launch>
