@@ -2,7 +2,7 @@
 
     <node name="boat_tf2_broadcaster" type="boat_tf2_broadcaster" pkg="sensors" />
 
-    <node name="dynamic_model_simulate" type="dynamic_model_simulate" pkg="sensors" />
+    <node name="dynamic_uncertain_model" type="dynamic_uncertain_model" pkg="sensors" />
 
     <arg name="model" default="$(find sensors)/urdf/boat.urdf"/>
 

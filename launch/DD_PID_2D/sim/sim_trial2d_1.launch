@@ -4,6 +4,6 @@
 
     <node pkg="usvspeedanglecontroller" type="usvspeedanglecontroller_node" name="usvspeedanglecontroller_node" />
 
-    <node pkg="sensors" type="2d_trial_2x5.py" name="2d_trial_2x5" />
+    <node pkg="sensors" type="trial2d_1.py" name="trial2d_1" />
 
 </launch>
