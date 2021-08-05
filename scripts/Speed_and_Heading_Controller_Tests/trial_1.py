@@ -61,6 +61,7 @@ def main():
     r = Float64()
     e = Float64()
     time.sleep(10)
+    rospy.logwarn("Starting")
     if t.testing:
         start_time = rospy.Time.now().secs
         i = 0

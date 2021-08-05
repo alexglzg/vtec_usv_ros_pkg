@@ -1,0 +1,9 @@
+<launch>
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <node pkg="usvspeedanglecontroller" type="usvspeedanglecontroller_node" name="usvspeedanglecontroller_node" />
+
+    <node pkg="sensors" type="trial2d_2.py" name="trial2d_2" />
+
+</launch>
