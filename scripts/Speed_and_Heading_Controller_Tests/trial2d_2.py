@@ -69,8 +69,8 @@ def main():
     dir_name = os.path.dirname(__file__)
     profile_speed = []
     profile_heading = []
-    bag = rosbag.Bag(dir_name + '/mat/2d_trial2_5.bag','w')
-    trial_1 = rosbag.Bag(dir_name + '/mat/2d_trial1.bag')
+    bag = rosbag.Bag(dir_name + '/mat/trial2d_2_5.bag','w')
+    trial_1 = rosbag.Bag(dir_name + '/mat/trial2d_1.bag')
     for topic, msg, ti in trial_1.read_messages(topics=['e_speed']):
         profile_speed.append(msg.data)
     for topic, msg, ti in trial_1.read_messages(topics=['e_heading']):

@@ -8,6 +8,7 @@ import math
 import scipy.io as sio
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Float64, UInt8
+import numpy as np
 
 #Variable Speed and Variable Heading
 #Experiment 1 velocity profile for data driven optimization
@@ -24,6 +25,7 @@ class Test:
         self.control_input_speed = 0.0
         self.velocity = 0.0
         self.control_input_heading = 0.0
+        self.yaw_rate = 0.0
         self.heading = 0.0
         self.flag = 0
         self.arduino = 0
@@ -37,12 +39,14 @@ class Test:
         self.d_speed_pub = rospy.Publisher("/guidance/desired_speed", Float64, queue_size=10)
         self.d_heading_pub = rospy.Publisher("/guidance/desired_heading", Float64, queue_size=10)
 
+
     def input_callback(self, _control_input):
         self.control_input_speed = _control_input.x
         self.control_input_heading = _control_input.theta
 
     def vel_callback(self, _vel):
         self.velocity = _vel.x
+        self.yaw_rate = _vel.z
 
     def ned_callback(self, _ned):
         self.x_pos = _ned.x
@@ -62,13 +66,18 @@ class Test:
         self.d_heading_pub.publish(self.dh)
 
 def main():
-    rospy.init_node('trial2d_1', anonymous=False)
+    rospy.init_node('trialnu_3', anonymous=False)
     rate = rospy.Rate(100)
     t = Test()
     dir_name = os.path.dirname(__file__)
-    profile = sio.loadmat(dir_name + '/mat/profile.mat')
-    profile = profile['profile']
-    bag = rosbag.Bag(dir_name + '/mat/trial2d_1.bag','w')
+    profile_speed = []
+    profile_heading = []
+    bag = rosbag.Bag(dir_name + '/mat/trialnu_3_25.bag','w')
+    trial_1 = rosbag.Bag(dir_name + '/mat/trialnu_1.bag')
+    for topic, msg, ti in trial_1.read_messages(topics=['e_speed']):
+        profile_speed.append(msg.data)
+    for topic, msg, ti in trial_1.read_messages(topics=['e_heading']):
+        profile_heading.append(msg.data)
     u_speed = Float64()
     y_speed = Float64()
     r_speed = Float64()
@@ -77,46 +86,55 @@ def main():
     y_heading = Float64()
     r_heading = Float64()
     e_heading = Float64()
-    p_vector = Pose2D()
+    p = Pose2D()
 
+    rs_f = 0.0 #Filtered reference
+    rs_dot = 0.0
+    rs_dot_last = 0.0
+    rh_f = 0.0 #Filtered reference
+    rh_dot = 0.0
+    rh_dot_last = 0.0
+    a = 2.5
+    b = 2.5
+    time_step = 0.01
     time.sleep(10)
     rospy.logwarn("Starting")
     if t.testing:
         start_time = rospy.Time.now().secs
         i = 0
-        while (not rospy.is_shutdown()) and (i < len(profile)):
+        while (not rospy.is_shutdown()) and (i < len(profile_speed)):
             if (t.flag != 0) and (t.arduino != 0):
-                if (profile[i]*0.75 > 0.01):
-                    u_speed.data = t.control_input_speed
-                    y_speed.data = t.velocity
-                    r_speed.data = profile[i]*0.75
-                    e_speed.data = r_speed.data - y_speed.data
-                    u_heading.data = t.control_input_heading
-                    y_heading.data = t.heading
-                    r_heading.data = -profile[i]*1.5
-                    e_heading.data = r_heading.data - y_heading.data
-                    p_vector.x = t.x_pos
-                    p_vector.y = t.y_pos
-                    p_vector.theta = t.heading
-                    bag.write('u_speed', u_speed)
-                    bag.write('y_speed', y_speed)
-                    bag.write('r_speed', r_speed)
-                    bag.write('e_speed', e_speed)
-                    bag.write('u_heading', u_heading)
-                    bag.write('y_heading', y_heading)
-                    bag.write('r_heading', r_heading)
-                    bag.write('e_heading', e_heading)
-                    bag.write('position', p_vector)
-                    t.desired(profile[i]*0.75,-profile[i]*1.5)
-                else:
-                    t.desired(0.0,0.0)
-                    if i > len(profile)/2:
-                        bag.close()
-                        rospy.logwarn("Finished")
-                        i = len(profile)
-                        t.testing = False
+                rs_dot = b*profile_speed[i] - a*rs_f
+                rs_f = time_step*(rs_dot + rs_dot_last)/2 + rs_f
+                rs_dot_last = rs_dot
+                rh_dot = b*profile_heading[i] - a*rh_f
+                rh_f = time_step*(rh_dot + rh_dot_last)/2 + rh_f
+                rh_dot_last = rh_dot
+                u_speed.data = t.control_input_speed
+                y_speed.data = t.velocity
+                r_speed.data = rs_f
+                e_speed.data = r_speed.data - y_speed.data
+                u_heading.data = t.control_input_heading
+                y_heading.data = t.yaw_rate
+                r_heading.data = rh_f
+                e_heading.data = r_heading.data - y_heading.data
+                p.x = t.x_pos
+                p.y = t.y_pos
+                p.theta = t.heading
+                bag.write('u_speed', u_speed)
+                bag.write('y_speed', y_speed)
+                bag.write('r_speed', r_speed)
+                bag.write('e_speed', e_speed)
+                bag.write('u_heading', u_heading)
+                bag.write('y_heading', y_heading)
+                bag.write('r_heading', r_heading)
+                bag.write('e_heading', e_heading)
+                bag.write('position', p)
+
+                t.desired(0.7,rh_f)
                 i = i + 1
             rate.sleep()
+        bag.close()
         t.desired(0.0,0.0)
         t.testing = False
         rospy.logwarn("Finished")

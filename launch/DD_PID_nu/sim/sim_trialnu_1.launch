@@ -1,0 +1,9 @@
+<launch>
+
+    <include file="$(find sensors)/launch/usv_simulation.launch" />
+
+    <node pkg="usvnucontroller" type="usvnucontroller_node" name="usvnucontroller_node" />
+
+    <node pkg="sensors" type="trialnu_1.py" name="trialnu_1" />
+
+</launch>
