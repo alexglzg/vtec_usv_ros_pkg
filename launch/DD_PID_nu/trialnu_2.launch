@@ -2,7 +2,7 @@
 
     <include file="$(find vectornav)/launch/vectornav.launch" />
 
-    <node pkg="usvnucontroller" type="usvnucontroller_node" name="usvnucontroller_node" />
+    <node pkg="usvnuflcontroller" type="usvnuflcontroller_node" name="usvnuflcontroller_node" />
 
     <node pkg="sensors" type="trialnu_2.py" name="trialnu_2" />
 

@@ -2,7 +2,7 @@
 
     <include file="$(find vectornav)/launch/vectornav.launch" />
 
-    <node pkg="usvspeedanglecontroller" type="usvspeedanglecontroller_node" name="usvspeedanglecontroller_node" />
+    <node pkg="usvnuflcontroller" type="usvnuflcontroller_node" name="usvnuflcontroller_node" />
 
     <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
 
