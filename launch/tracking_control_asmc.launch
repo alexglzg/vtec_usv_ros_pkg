@@ -12,8 +12,8 @@
 	<param name = "mu_y" value = "0.1" />
     <param name = "lambda_x" value = "1.0" />
 	<param name = "lambda_y" value = "1.0" />
-    <param name = "tc_x" value = "10.0" />
-	<param name = "tc_y" value = "10.0" />
+    <!--param name = "tc_x" value = "10.0" /-->
+	<!--param name = "tc_y" value = "10.0" /-->
     </node>
 
 </launch>

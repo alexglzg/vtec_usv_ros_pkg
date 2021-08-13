@@ -107,11 +107,11 @@ public:
     //ROS Publishers for each required sensor data
     right_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/right_thruster", 1000);
     left_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/left_thruster", 1000);
-    speed_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/adaptive_super_twisting/speed_gain", 1000);
+    speed_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/simpl_adaptive_super_twisting/speed_gain", 1000);
     speed_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/speed_error", 1000);
-    speed_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/adaptive_super_twisting/speed_sigma", 1000);
-    heading_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/adaptive_super_twisting/heading_sigma", 1000);
-    heading_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/adaptive_super_twisting/heading_gain", 1000);
+    speed_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/simpl_adaptive_super_twisting/speed_sigma", 1000);
+    heading_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/simpl_adaptive_super_twisting/heading_sigma", 1000);
+    heading_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/simpl_adaptive_super_twisting/heading_gain", 1000);
     heading_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/heading_error", 1000);
     
     //ROS Subscribers
@@ -129,12 +129,12 @@ public:
     static const float dlambda_u = 0.001;
     static const float dlambda_psi = 1;
 
-    n.param("/adaptive_super_twisting/k_u", k_u, dk_u);
-    n.param("/adaptive_super_twisting/k_psi", k_psi, dk_psi);
-    n.param("/adaptive_super_twisting/kmin_u", kmin_u, dkmin_u);
-    n.param("/adaptive_super_twisting/kmin_psi", kmin_psi, dkmin_psi);
-    n.param("/adaptive_super_twisting/lambda_u", lambda_u, dlambda_u);
-    n.param("/adaptive_super_twisting/lambda_psi", lambda_psi, dlambda_psi);
+    n.param("/simpl_adaptive_super_twisting/k_u", k_u, dk_u);
+    n.param("/simpl_adaptive_super_twisting/k_psi", k_psi, dk_psi);
+    n.param("/simpl_adaptive_super_twisting/kmin_u", kmin_u, dkmin_u);
+    n.param("/simpl_adaptive_super_twisting/kmin_psi", kmin_psi, dkmin_psi);
+    n.param("/simpl_adaptive_super_twisting/lambda_u", lambda_u, dlambda_u);
+    n.param("/simpl_adaptive_super_twisting/lambda_psi", lambda_psi, dlambda_psi);
 
     u_d = 0;
     psi_d = 0;
