@@ -106,15 +106,16 @@ def main():
             t.des_altitude_pub.publish(o)
 
 
+        #Higher disturbances for IBVS-ASMC, lower for IBVS-PD
         now = rospy.Time.now().secs - start_time
         if ((now >= 10) and (now <= 20)):
             usv_disturbance.x = -5.0
             usv_disturbance.y = 0.0
             usv_disturbance.theta = 0.0
             t.usv_disturbance_pub.publish(usv_disturbance)
-            uav_disturbance.x = -0.1
+            uav_disturbance.x = -0.1#-0.001#-0.1
             uav_disturbance.y = 0.0
-            uav_disturbance.z = 0.05
+            uav_disturbance.z = 0.05#0.0005#0.05
             t.uav_disturbance_pub.publish(uav_disturbance)
 
         elif ((now >= 30) and (now <= 45)):
@@ -122,9 +123,9 @@ def main():
             usv_disturbance.y = 0.0
             usv_disturbance.theta = 0.0
             t.usv_disturbance_pub.publish(usv_disturbance)
-            uav_disturbance.x = -0.1
+            uav_disturbance.x = -0.1#-0.001#-0.1
             uav_disturbance.y = 0.0
-            uav_disturbance.z = 0.05
+            uav_disturbance.z = 0.05#0.0005#0.05
             t.uav_disturbance_pub.publish(uav_disturbance)
 
         elif ((now >= 55) and (now <= 65)):
@@ -132,9 +133,9 @@ def main():
             usv_disturbance.y = 0.0
             usv_disturbance.theta = 0.0
             t.usv_disturbance_pub.publish(usv_disturbance)
-            uav_disturbance.x = -0.1
+            uav_disturbance.x = -0.1#-0.001#-0.1
             uav_disturbance.y = 0.0
-            uav_disturbance.z = 0.05
+            uav_disturbance.z = 0.05#0.0005#0.05
             t.uav_disturbance_pub.publish(uav_disturbance)
 
         else:

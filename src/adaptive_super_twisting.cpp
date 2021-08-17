@@ -66,6 +66,16 @@ public:
   float x2_dot_last_u;
   float x2_dot_last_psi;
 
+  float o_dot_dot;
+  float o_dot;
+  float o;
+  float o_last;
+  float o_dot_last;
+  float o_dot_dot_last;
+  static const float f1 = 2;
+  static const float f2 = 2;
+  static const float f3 = 2;
+
   //Controller gains
   float k_u;
   float k_psi;
@@ -93,7 +103,7 @@ public:
     //ROS Subscribers
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &AdaptiveSuperTwistingControl::desiredSpeedCallback, this);
     desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, &AdaptiveSuperTwistingControl::desiredHeadingCallback, this);
-    ins_pose_sub = n.subscribe("/vectornav/ins_2d/ins_pose", 1000, &AdaptiveSuperTwistingControl::insCallback, this);
+    ins_pose_sub = n.subscribe("/vectornav/ins_2d/NED_pose", 1000, &AdaptiveSuperTwistingControl::insCallback, this);
     local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, &AdaptiveSuperTwistingControl::velocityCallback, this);
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSuperTwistingControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &AdaptiveSuperTwistingControl::arduinoCallback, this);
@@ -193,8 +203,19 @@ public:
       e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
       e_u_last = e_u;
 
-      float r_d = (psi_d - psi_d_last) / integral_step;
+      float psi_d_dif = psi_d - psi_d_last;
+      if (std::abs(psi_d_dif) > 3.141592){
+          psi_d_dif = (psi_d_dif/std::abs(psi_d_dif))*(std::abs(psi_d_dif) - 2*3.141592);
+      }
+      float r_d = (psi_d_dif) / integral_step;
       psi_d_last = psi_d;
+      o_dot_dot = (((r_d - o_last) * f1) - (f3 * o_dot_last)) * f2;
+      o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
+      o = (integral_step)*(o_dot + o_dot_last)/2 + o;
+      r_d = o;
+      o_last = o;
+      o_dot_last = o_dot;
+      o_dot_dot_last = o_dot_dot;
 
       float e_psi_dot = r_d - r;
 
@@ -303,6 +324,12 @@ public:
         x2_dot_last_psi = 0;
         e_u_int = 0;
         e_u_last = 0;
+        o_dot_dot = 0;
+        o_dot = 0;
+        o = 0;
+        o_last = 0;
+        o_dot_last = 0;
+        o_dot_dot_last = 0;
       }
 
       port_t = (Tx / 2) + (Tz / B);

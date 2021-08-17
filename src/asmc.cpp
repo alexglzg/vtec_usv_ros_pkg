@@ -96,7 +96,7 @@ public:
     //ROS Subscribers
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &AdaptiveSlidingModeControl::desiredSpeedCallback, this);
     desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, &AdaptiveSlidingModeControl::desiredHeadingCallback, this);
-    ins_pose_sub = n.subscribe("/vectornav/ins_2d/ins_pose", 1000, &AdaptiveSlidingModeControl::insCallback, this);
+    ins_pose_sub = n.subscribe("/vectornav/ins_2d/NED_pose", 1000, &AdaptiveSlidingModeControl::insCallback, this);
     local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, &AdaptiveSlidingModeControl::velocityCallback, this);
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSlidingModeControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &AdaptiveSlidingModeControl::arduinoCallback, this);
@@ -190,7 +190,11 @@ public:
       e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
       e_u_last = e_u;
 
-      float r_d = (psi_d - psi_d_last) / integral_step;
+      float psi_d_dif = psi_d - psi_d_last;
+      if (std::abs(psi_d_dif) > 3.141592){
+          psi_d_dif = (psi_d_dif/std::abs(psi_d_dif))*(std::abs(psi_d_dif) - 2*3.141592);
+      }
+      float r_d = (psi_d_dif) / integral_step;
       psi_d_last = psi_d;
       o_dot_dot = (((r_d - o_last) * f1) - (f3 * o_dot_last)) * f2;
       o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
@@ -268,7 +272,6 @@ public:
 
       Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
       Tz = ((lambda_psi * e_psi_dot) - f_psi - ua_psi) / g_psi; //yaw rate moment
-      //Tz = (- f_psi + (((lambda_psi * e_psi_dot) - ua_psi) / 0.1)) / (g_psi); //yaw rate moment
       
       if (Tx > 73){
         Tx = 73;
@@ -298,6 +301,8 @@ public:
         o_last = 0;
         o_dot_last = 0;
         o_dot_dot_last = 0;
+        psi_d = theta;
+        psi_d_last = theta;
       }
 
       port_t = (Tx / 2) + (Tz / B);

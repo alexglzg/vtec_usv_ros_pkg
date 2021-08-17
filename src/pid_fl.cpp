@@ -47,7 +47,7 @@ public:
   static const float m = 30;
   static const float Iz = 4.1;
   static const float B = 0.41;
-  static const float c = 0.78;
+  static const float c = 1.0;//0.78;
 
   //Controller gains
   static const float kp_u = 1.1;
@@ -92,7 +92,7 @@ public:
 
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &ProportionalIntegralDerivative::desiredSpeedCallback, this);
     desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, &ProportionalIntegralDerivative::desiredHeadingCallback, this);
-    ins_pose_sub = n.subscribe("/vectornav/ins_2d/ins_pose", 1000, &ProportionalIntegralDerivative::insCallback, this);
+    ins_pose_sub = n.subscribe("/vectornav/ins_2d/NED_pose", 1000, &ProportionalIntegralDerivative::insCallback, this);
     local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, &ProportionalIntegralDerivative::velocityCallback, this);
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &ProportionalIntegralDerivative::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &ProportionalIntegralDerivative::arduinoCallback, this);

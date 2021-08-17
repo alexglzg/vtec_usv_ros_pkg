@@ -1,0 +1,12 @@
+<launch>
+    <include file="$(find sensors)/launch/gazebo/spawn_sdf.launch">
+        <arg name="robot_name" value="vtec_s3" />
+        <arg name="x" value="0.0" />
+        <arg name="y" value="0.0" />
+        <arg name="z" value="0.0" />
+        <arg name="roll" value="0.0" />
+        <arg name="pitch" value="0.0" />
+        <arg name="yaw" value="0.0" />
+        <arg name="sdf_robot_file" value="$(find sensors)/models/vtec_s3/model.sdf" />
+    </include>
+</launch>
