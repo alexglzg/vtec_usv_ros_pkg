@@ -18,8 +18,8 @@ class Test:
         self.ds = 0.0
         self.dh = 0.0
 
-        self.x = 0.0
-        self.y = 0.0
+        self.x_pos = 0.0
+        self.y_pos = 0.0
 
         self.control_input_speed = 0.0
         self.velocity = 0.0
@@ -46,8 +46,8 @@ class Test:
         self.velocity = _vel.x
 
     def ned_callback(self, _ned):
-        self.x = _ned.x
-        self.y = _ned.y
+        self.x_pos = _ned.x
+        self.y_pos = _ned.y
         self.heading = _ned.theta
     
     def flag_callback(self, _flag):
@@ -69,12 +69,12 @@ def main():
     dir_name = os.path.dirname(__file__)
     profile_speed = []
     profile_heading = []
-    bag = rosbag.Bag(dir_name + '/mat/2d_trial2x5_5.bag','w')
-    trial_1 = rosbag.Bag(dir_name + '/mat/2d_trial1.bag')
+    bag = rosbag.Bag(dir_name + '/mat/trial2d_2x5_25.bag','w')
+    trial_1 = rosbag.Bag(dir_name + '/mat/trial2d_1.bag')
     for topic, msg, ti in trial_1.read_messages(topics=['e_speed']):
         profile_speed.append(msg.data*5)
     for topic, msg, ti in trial_1.read_messages(topics=['e_heading']):
-        profile_heading.append(msg.data*5)
+        profile_heading.append(msg.data)
     u_speed = Float64()
     y_speed = Float64()
     r_speed = Float64()
@@ -83,7 +83,7 @@ def main():
     y_heading = Float64()
     r_heading = Float64()
     e_heading = Float64()
-    pos = Pose2D()
+    p = Pose2D()
 
     rs_f = 0.0 #Filtered reference
     rs_dot = 0.0
@@ -91,8 +91,8 @@ def main():
     rh_f = 0.0 #Filtered reference
     rh_dot = 0.0
     rh_dot_last = 0.0
-    a = 5.0
-    b = 5.0
+    a = 2.5
+    b = 2.5
     time_step = 0.01
     time.sleep(10)
     rospy.logwarn("Starting")
@@ -115,9 +115,9 @@ def main():
                 y_heading.data = t.heading
                 r_heading.data = rh_f
                 e_heading.data = r_heading.data - y_heading.data
-                pos.x = t.x
-                pos.y = t.y
-                pos.theta = t.heading
+                p.x = t.x_pos
+                p.y = t.y_pos
+                p.theta = t.heading
                 bag.write('u_speed', u_speed)
                 bag.write('y_speed', y_speed)
                 bag.write('r_speed', r_speed)
@@ -126,9 +126,9 @@ def main():
                 bag.write('y_heading', y_heading)
                 bag.write('r_heading', r_heading)
                 bag.write('e_heading', e_heading)
-                bag.write('position', pos)
+                bag.write('position', p)
 
-                t.desired(rs_f,rh_f)
+                t.desired(rs_f,t.heading)
                 i = i + 1
             rate.sleep()
         bag.close()

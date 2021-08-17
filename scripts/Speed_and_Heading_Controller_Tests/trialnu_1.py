@@ -24,6 +24,7 @@ class Test:
         self.control_input_speed = 0.0
         self.velocity = 0.0
         self.control_input_heading = 0.0
+        self.yaw_rate = 0.0
         self.heading = 0.0
         self.flag = 0
         self.arduino = 0
@@ -43,6 +44,7 @@ class Test:
 
     def vel_callback(self, _vel):
         self.velocity = _vel.x
+        self.yaw_rate = _vel.z
 
     def ned_callback(self, _ned):
         self.x_pos = _ned.x
@@ -62,13 +64,13 @@ class Test:
         self.d_heading_pub.publish(self.dh)
 
 def main():
-    rospy.init_node('trial2d_1', anonymous=False)
+    rospy.init_node('trialnu_1', anonymous=False)
     rate = rospy.Rate(100)
     t = Test()
     dir_name = os.path.dirname(__file__)
     profile = sio.loadmat(dir_name + '/mat/profile.mat')
     profile = profile['profile']
-    bag = rosbag.Bag(dir_name + '/mat/trial2d_1.bag','w')
+    bag = rosbag.Bag(dir_name + '/mat/trialnu_1.bag','w')
     u_speed = Float64()
     y_speed = Float64()
     r_speed = Float64()
@@ -86,14 +88,14 @@ def main():
         i = 0
         while (not rospy.is_shutdown()) and (i < len(profile)):
             if (t.flag != 0) and (t.arduino != 0):
-                if (profile[i]*0.75 > 0.01):
+                if (profile[i] > 0.01):
                     u_speed.data = t.control_input_speed
                     y_speed.data = t.velocity
-                    r_speed.data = profile[i]*0.75
+                    r_speed.data = profile[i]
                     e_speed.data = r_speed.data - y_speed.data
                     u_heading.data = t.control_input_heading
-                    y_heading.data = t.heading
-                    r_heading.data = -profile[i]*1.5
+                    y_heading.data = t.yaw_rate
+                    r_heading.data = -profile[i]*0.5
                     e_heading.data = r_heading.data - y_heading.data
                     p_vector.x = t.x_pos
                     p_vector.y = t.y_pos
@@ -107,7 +109,7 @@ def main():
                     bag.write('r_heading', r_heading)
                     bag.write('e_heading', e_heading)
                     bag.write('position', p_vector)
-                    t.desired(profile[i]*0.75,-profile[i]*1.5)
+                    t.desired(profile[i],-profile[i]*0.5)
                 else:
                     t.desired(0.0,0.0)
                     if i > len(profile)/2:
