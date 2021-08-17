@@ -69,7 +69,7 @@ public:
   static const float Iz = 4.1;
   static const float B = 0.41;
   static const float c = 0.78;
-  static const float l = 0.5;
+  static const float l = 2.0;
 
   float f_u;
   float g_u;
