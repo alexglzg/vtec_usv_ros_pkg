@@ -37,19 +37,19 @@ def main():
     t = Test()
     offset = 0
     sinewave = 0
+    time.sleep(8)
+    rospy.logwarn("Start")
     if t.testing:
         start_time = rospy.Time.now().secs
-        while (rospy.Time.now().secs - start_time) <= 1:
-            t.desired(0,t.reference_heading)
-            time.sleep(0.1)
-        while (rospy.Time.now().secs - start_time) <= 5:
+        while (rospy.Time.now().secs - start_time) <= 5 and (not rospy.is_shutdown()):
             t.desired(0.7,t.reference_heading)
-            time.sleep(0.1)
-        while (rospy.Time.now().secs - start_time) <= 45:
-            offset += math.pi/200
+            time.sleep(0.01)
+        rospy.logwarn("Varying")
+        while (rospy.Time.now().secs - start_time) <= 45 and (not rospy.is_shutdown()):
+            offset += math.pi/2000
             sinewave = 0.4*math.sin(offset)
             t.desired(0.7,t.reference_heading+sinewave)
-            time.sleep(0.1)
+            time.sleep(0.01)
         t.desired(0,t.reference_heading+sinewave)
         t.testing = False
         rospy.logwarn("Finished")

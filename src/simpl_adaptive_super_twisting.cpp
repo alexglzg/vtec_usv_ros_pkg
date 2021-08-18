@@ -122,10 +122,10 @@ public:
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSuperTwistingControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &AdaptiveSuperTwistingControl::arduinoCallback, this);
 
-    static const float dk_u = 0.005;
-    static const float dk_psi = 0.005;
-    static const float dkmin_u = 0.01;
-    static const float dkmin_psi = 0.01;
+    static const float dk_u = 0.02;
+    static const float dk_psi = 0.02;
+    static const float dkmin_u = 0.008;
+    static const float dkmin_psi = 0.008;
     static const float dlambda_u = 0.001;
     static const float dlambda_psi = 1;
 
@@ -324,9 +324,9 @@ public:
       if (u_d == 0){
         Tx = 0;
         Tz = 0;
-        Ka_u = 0.05;
+        Ka_u = kmin_u*10;
         Ka_dot_last_u = 0;
-        Ka_psi = 0.05;
+        Ka_psi = kmin_psi*10;
         Ka_dot_last_psi = 0;
         x2_u = 0;
         x2_psi = 0;
