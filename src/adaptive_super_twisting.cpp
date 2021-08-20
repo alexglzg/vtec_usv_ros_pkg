@@ -330,6 +330,7 @@ public:
         o_last = 0;
         o_dot_last = 0;
         o_dot_dot_last = 0;
+        psi_d_last = theta;
       }
 
       port_t = (Tx / 2) + (Tz / B);

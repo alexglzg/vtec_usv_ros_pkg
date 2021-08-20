@@ -255,7 +255,7 @@ public:
       }
 
 
-      if (Ka_u >= kmin_u){
+      if (Ka_u > kmin_u){
           top_u = -((k_u/sqrt_of_2) * std::abs(Ka_u-kmin_u)) + ((Ka_u/2) * sigma_u_abs_sqrt);
           integral_1_u_dot = Ka_u*Ka_u*sign_u;
           integral_2_u_dot = (Ka_u*Ka_u/2)*sign_u;
@@ -270,7 +270,7 @@ public:
         Ka_dot_u = kmin_u;
       } 
 
-      if (Ka_psi >= kmin_psi){
+      if (Ka_psi > kmin_psi){
           top_psi = -((k_psi/sqrt_of_2) * std::abs(Ka_psi-kmin_psi)) + ((Ka_psi/2) * sigma_psi_abs_sqrt);
           integral_1_psi_dot = Ka_psi*Ka_psi*sign_psi;
           integral_2_psi_dot = (Ka_psi*Ka_psi/2)*sign_psi;
@@ -324,9 +324,9 @@ public:
       if (u_d == 0){
         Tx = 0;
         Tz = 0;
-        Ka_u = kmin_u*10;
+        Ka_u = 0.05;
         Ka_dot_last_u = 0;
-        Ka_psi = kmin_psi*10;
+        Ka_psi = 0.05;
         Ka_dot_last_psi = 0;
         x2_u = 0;
         x2_psi = 0;
@@ -348,6 +348,7 @@ public:
         integral_2_u_dot_last = 0;
         integral_1_psi_dot_last = 0;
         integral_2_psi_dot_last = 0;
+        psi_d_last = theta;
       }
 
       port_t = (Tx / 2) + (Tz / B);

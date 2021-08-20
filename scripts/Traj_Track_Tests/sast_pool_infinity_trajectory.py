@@ -55,7 +55,8 @@ def main():
     xddot = xddot['data']
     yddot = sio.loadmat(dir_name + '/mat/traj2/pool_yddot.mat')
     yddot = yddot['data']
-    time.sleep(8)
+    time.sleep(10)
+    rospy.logwarn("Start")
     if t.testing:
         start_time = rospy.Time.now().secs
         i = 0

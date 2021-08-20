@@ -18,7 +18,7 @@ class Test:
 
         self.reference_heading = 0
 
-        rospy.Subscriber("/vectornav/ins_2d/ref", Pose2D, self.ref_callback)
+        rospy.Subscriber("/vectornav/ins_2d/ins_ref", Pose2D, self.ref_callback)
 
         self.d_speed_pub = rospy.Publisher("/guidance/desired_speed", Float64, queue_size=10)
         self.d_heading_pub = rospy.Publisher("/guidance/desired_heading", Float64, queue_size=10)
@@ -37,7 +37,7 @@ def main():
     t = Test()
     offset = 0
     sinewave = 0
-    time.sleep(8)
+    time.sleep(10)
     rospy.logwarn("Start")
     if t.testing:
         start_time = rospy.Time.now().secs
