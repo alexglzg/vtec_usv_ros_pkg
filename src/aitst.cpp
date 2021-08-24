@@ -6,7 +6,7 @@
 #include "geometry_msgs/Vector3.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/UInt8.h"
-#include <ros/console.h>
+
 
 class AdaptiveSuperTwistingControl
 {
@@ -25,16 +25,38 @@ public:
 
   int testing;
   int arduino;
+  float starting;
+  float delayed_start;
 
   //Tracking variables
   float u_d;
   float psi_d;
+  float psi_d_dif;
+  float r_d;
 
   //Auxiliry variables
-  float e_u_int;
-  float e_u_last;
+  float e_u0;
+  float e_p0;
+  float e_u;
+  float e_psi;
   float psi_d_last;
-  float u_abs;
+  int sign_eu;
+  int sign_ep;
+  float ei_u;
+  float eidot_u;
+  float eidot_u_last;
+  float ei_p;
+  float eidot_p;
+  float eidot_p_last;
+  float e_psi_dot;
+  float sigma_u;
+  float sigma_psi;
+  float sigma_u_abs;
+  float sigma_psi_abs;
+  int sign_u_sm;
+  int sign_psi_sm;
+  int sign_u;
+  int sign_psi;
 
   //Model pysical parameters
   float Xu;
@@ -47,24 +69,10 @@ public:
   static const float Iz = 4.1;
   static const float B = 0.41;
   static const float c = 0.78;
-  float sqrt_of_2;
   float g_u;
   float g_psi;
   float f_u;
   float f_psi;
-  float e_u;
-  float e_psi;
-  float psi_d_dif;
-  float r_d;
-  float e_psi_dot;
-  float sigma_u;
-  float sigma_psi;
-  float sigma_u_abs;
-  float sigma_psi_abs;
-  float sigma_u_abs_sqrt;
-  float sigma_psi_abs_sqrt;
-  int sign_u;
-  int sign_psi;
   
   float Tx;
   float Tz;
@@ -91,48 +99,42 @@ public:
   float o_last;
   float o_dot_last;
   float o_dot_dot_last;
-  static const float f1 = 2.0;
-  static const float f2 = 2.0;
-  static const float f3 = 2.0;
-
-  float integral_1_u;
-  float integral_2_u;
-  float integral_1_psi;
-  float integral_2_psi;
-  float integral_1_u_dot;
-  float integral_2_u_dot;
-  float integral_1_psi_dot;
-  float integral_2_psi_dot;
-  float integral_1_u_dot_last;
-  float integral_2_u_dot_last;
-  float integral_1_psi_dot_last;
-  float integral_2_psi_dot_last;
-  float top_u;
-  float bottom_u;
-  float top_psi;
-  float bottom_psi;
+  static const float f1 = 2;
+  static const float f2 = 2;
+  static const float f3 = 2;
 
   //Controller gains
   float k_u;
   float k_psi;
   float kmin_u;
   float kmin_psi;
-  float lambda_u;
-  float lambda_psi;
+  float epsilon_u;
+  float epsilon_psi;
+  float miu_u;
+  float miu_psi;
+  float alpha_u;
+  float alpha_psi;
+  float beta_psi;
+  float q_u;
+  float q_psi;
+  float p_u;
+  float p_psi;
+
 
   AdaptiveSuperTwistingControl()
   {
     //ROS Publishers for each required sensor data
     right_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/right_thruster", 1000);
     left_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/left_thruster", 1000);
-    speed_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/simpl_adaptive_super_twisting/speed_gain", 1000);
+    speed_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/aitst/speed_gain", 1000);
     speed_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/speed_error", 1000);
-    speed_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/simpl_adaptive_super_twisting/speed_sigma", 1000);
-    heading_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/simpl_adaptive_super_twisting/heading_sigma", 1000);
-    heading_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/simpl_adaptive_super_twisting/heading_gain", 1000);
+    speed_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/aitst/speed_sigma", 1000);
+    heading_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/aitst/heading_sigma", 1000);
+    heading_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/aitst/heading_gain", 1000);
     heading_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/heading_error", 1000);
     
     //ROS Subscribers
+    desired_trajectory_sub = n.subscribe("/mission/trajectory", 1000, &AdaptiveSuperTwistingControl::desiredTrajCallback, this);
     desired_speed_sub = n.subscribe("/guidance/desired_speed", 1000, &AdaptiveSuperTwistingControl::desiredSpeedCallback, this);
     desired_heading_sub = n.subscribe("/guidance/desired_heading", 1000, &AdaptiveSuperTwistingControl::desiredHeadingCallback, this);
     ins_pose_sub = n.subscribe("/vectornav/ins_2d/NED_pose", 1000, &AdaptiveSuperTwistingControl::insCallback, this);
@@ -140,24 +142,44 @@ public:
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSuperTwistingControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &AdaptiveSuperTwistingControl::arduinoCallback, this);
 
-    static const float dk_u = 0.02;
-    static const float dk_psi = 0.02;
-    static const float dkmin_u = 0.008;
-    static const float dkmin_psi = 0.008;
-    static const float dlambda_u = 0.001;
-    static const float dlambda_psi = 1;
+    static const float dk_u = 0.4;
+    static const float dk_psi = 0.5;
+    static const float dkmin_u = 0.01;
+    static const float dkmin_psi = 0.01;
+    static const float depsilon_u = 0.01;
+    static const float depsilon_psi = 0.01;
+    static const float dmiu_u = 0.05;
+    static const float dmiu_psi = 0.05;
+    static const float dalpha_u = 0.8;
+    static const float dalpha_psi = 0.8;
+    static const float dbeta_psi = 1.0;
+    static const float dq_u = 3;
+    static const float dq_psi = 3;
+    static const float dp_u = 5;
+    static const float dp_psi = 5;
 
-    n.param("/simpl_adaptive_super_twisting/k_u", k_u, dk_u);
-    n.param("/simpl_adaptive_super_twisting/k_psi", k_psi, dk_psi);
-    n.param("/simpl_adaptive_super_twisting/kmin_u", kmin_u, dkmin_u);
-    n.param("/simpl_adaptive_super_twisting/kmin_psi", kmin_psi, dkmin_psi);
-    n.param("/simpl_adaptive_super_twisting/lambda_u", lambda_u, dlambda_u);
-    n.param("/simpl_adaptive_super_twisting/lambda_psi", lambda_psi, dlambda_psi);
+    n.param("/aitst/k_u", k_u, dk_u);
+    n.param("/aitst/k_psi", k_psi, dk_psi);
+    n.param("/aitst/kmin_u", kmin_u, dkmin_u);
+    n.param("/aitst/kmin_psi", kmin_psi, dkmin_psi);
+    n.param("/aitst/epsilon_u", epsilon_u, depsilon_u);
+    n.param("/aitst/epsilon_psi", epsilon_psi, depsilon_psi);
+    n.param("/aitst/mu_u", miu_u, dmiu_u);
+    n.param("/aitst/mu_psi", miu_psi, dmiu_psi);
+    n.param("/aitst/alpha_u", alpha_u, dalpha_u);
+    n.param("/aitst/alpha_psi", alpha_psi, dalpha_psi);
+    n.param("/aitst/beta_psi", beta_psi, dbeta_psi);
+    n.param("/aitst/p_u", p_u, dp_u);
+    n.param("/aitst/p_psi", p_psi, dp_psi);
+    n.param("/aitst/q_u", q_u, dq_u);
+    n.param("/aitst/q_psi", q_psi, dq_psi);
 
     u_d = 0;
     psi_d = 0;
     testing = 0;
     arduino = 0;
+    starting = 0;
+    delayed_start = 0;
 
     x2_u = 0;
     x2_psi = 0;
@@ -165,7 +187,6 @@ public:
     x2_dot_psi = 0;
     x2_dot_last_u = 0;
     x2_dot_last_psi = 0;
-    sqrt_of_2 = pow(2.0,0.5);
 
   }
 
@@ -182,6 +203,11 @@ public:
   void insCallback(const geometry_msgs::Pose2D::ConstPtr& _ins)
   {
     theta = _ins -> theta;
+  }
+
+  void desiredTrajCallback(const geometry_msgs::Pose2D::ConstPtr& _pd)
+  {
+    starting = _pd -> theta;
   }
 
   void velocityCallback(const geometry_msgs::Vector3::ConstPtr& _vel)
@@ -206,13 +232,13 @@ public:
     if (testing == 1 && arduino == 1){
       Xu = -25;
       Xuu = 0;
-      u_abs = std::abs(u);
+      float u_abs = std::abs(u);
       if (u_abs > 1.2){
         Xu = 64.55;
         Xuu = -70.92;
       }
 
-      Nr = (-0.52)*pow(pow(u,2.0) + pow(v,2.0),0.5);
+      Nr = (-0.52)*pow(pow(u,2) + pow(v,2),0.5);
 
       g_u = (1 / (m - X_u_dot));
       g_psi = (1 / (Iz - N_r_dot));
@@ -223,20 +249,38 @@ public:
       e_u = u_d - u;
       e_psi = psi_d - theta;
       if (std::abs(e_psi) > 3.141592){
-          e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi) - 2.0*3.141592);
+          e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi) - 2*3.141592);
       }
-      e_u_int = (integral_step)*(e_u + e_u_last)/2.0 + e_u_int; //integral of the surge speed error
-      e_u_last = e_u;
+
+      if (e_u == 0){
+        sign_eu = 0;
+      }
+      else {
+        sign_eu = copysign(1,e_u);
+      }
+      if (e_psi == 0){
+        sign_ep = 0;
+      }
+      else {
+        sign_ep = copysign(1,e_psi);
+      }
+
+      eidot_u = sign_eu*pow(std::abs(e_u),q_u/p_u);
+      eidot_p = sign_ep*pow(std::abs(e_psi),q_psi/p_psi);
+      ei_u = (integral_step)*(eidot_u + eidot_u_last)/2 + ei_u; //u integral error
+      eidot_u_last = eidot_u;
+      ei_p = (integral_step)*(eidot_p + eidot_p_last)/2 + ei_p; //r integral error
+      eidot_p_last = eidot_p;
 
       psi_d_dif = psi_d - psi_d_last;
       if (std::abs(psi_d_dif) > 3.141592){
-          psi_d_dif = (psi_d_dif/std::abs(psi_d_dif))*(std::abs(psi_d_dif) - 2.0*3.141592);
+          psi_d_dif = (psi_d_dif/std::abs(psi_d_dif))*(std::abs(psi_d_dif) - 2*3.141592);
       }
       r_d = (psi_d_dif) / integral_step;
       psi_d_last = psi_d;
       o_dot_dot = (((r_d - o_last) * f1) - (f3 * o_dot_last)) * f2;
-      o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2.0 + o_dot;
-      o = (integral_step)*(o_dot + o_dot_last)/2.0 + o;
+      o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
+      o = (integral_step)*(o_dot + o_dot_last)/2 + o;
       r_d = o;
       o_last = o;
       o_dot_last = o_dot;
@@ -244,87 +288,94 @@ public:
 
       e_psi_dot = r_d - r;
 
-      sigma_u = e_u + lambda_u * e_u_int;
-      sigma_psi = e_psi_dot + lambda_psi * e_psi;
+      if ((delayed_start == 1) && (u_d > 0)){
+          ei_u = -(e_u)/alpha_u;
+          ei_p = -(e_psi_dot + beta_psi*e_psi)/alpha_psi;
+          ROS_FATAL_STREAM("e_u = " << e_u);
+          ROS_FATAL_STREAM("e_psi = " << e_psi);
+          delayed_start = starting;
+      }
+
+      if (starting == 1){
+          delayed_start = starting;
+      }
+
+      sigma_u = e_u + alpha_u*ei_u;
+      sigma_psi = e_psi_dot + beta_psi * e_psi + alpha_psi*ei_p;
       
       sigma_u_abs = std::abs(sigma_u);
       sigma_psi_abs = std::abs(sigma_psi);
+      
+      sign_u_sm = 0;
+      sign_psi_sm = 0;
 
-      sigma_u_abs_sqrt = pow(sigma_u_abs,0.5);
-      sigma_psi_abs_sqrt = pow(sigma_psi_abs,0.5);
-
-      if (sigma_u == 0){
-        sign_u = 0;
-      }
-      else{
-        sign_u = copysign(1,sigma_u);
-      }
-
-      if (sigma_psi == 0){
-        sign_psi = 0;
-      }
-      else{
-        sign_psi = copysign(1,sigma_psi);
-      }
-
-      integral_1_u_dot = Ka_u*Ka_u*sign_u;
-      integral_2_u_dot = (Ka_u*Ka_u/2.0)*sign_u;
-      integral_1_u = (integral_step)*(integral_1_u_dot + integral_1_u_dot_last)/2.0 + integral_1_u;
-      integral_1_u_dot_last = integral_1_u_dot;
-      integral_2_u = (integral_step)*(integral_2_u_dot + integral_2_u_dot_last)/2.0 + integral_2_u;
-      integral_2_u_dot_last = integral_2_u_dot;
-      //ROS_FATAL_STREAM("integral_1_u = " << integral_1_u);
-      //ROS_FATAL_STREAM("integral_2_u = " << integral_2_u);
-
-      if (Ka_u >= kmin_u){
-          top_u = ((-k_u/sqrt_of_2) * std::abs(Ka_u-kmin_u)) + ((Ka_u/2.0) * sigma_u_abs_sqrt);
-          bottom_u = (Ka_u-kmin_u) + ((2.0/(Ka_u*Ka_u)) * (sigma_u_abs_sqrt*sign_u + (1.0/Ka_u)*integral_1_u) * (-integral_2_u));
-          //bottom_u = (Ka_u-kmin_u) + ((2.0/(Ka_u*Ka_u)) * (sigma_u_abs_sqrt*sign_u + (1.0/Ka_u)*integral_1_u) * (integral_2_u));
-          Ka_dot_u = top_u/bottom_u;
+      if (Ka_u > kmin_u){
+          float signvar = sigma_u_abs - miu_u;
+          if (signvar == 0){
+            sign_u_sm = 0;
+          }
+          else {
+            sign_u_sm = copysign(1,signvar);
+          }
+          Ka_dot_u = k_u * sign_u_sm;
       }
       else{
         Ka_dot_u = kmin_u;
       } 
 
-      integral_1_psi_dot = Ka_psi*Ka_psi*sign_psi;
-      integral_2_psi_dot = (Ka_psi*Ka_psi/2.0)*sign_psi;
-      integral_1_psi = (integral_step)*(integral_1_psi_dot + integral_1_psi_dot_last)/2.0 + integral_1_psi;
-      integral_1_psi_dot_last = integral_1_psi_dot;
-      integral_2_psi = (integral_step)*(integral_2_psi_dot + integral_2_psi_dot_last)/2.0 + integral_2_psi;
-      integral_2_psi_dot_last = integral_2_psi_dot;
-
-      if (Ka_psi >= kmin_psi){
-          top_psi = ((-k_psi/sqrt_of_2) * std::abs(Ka_psi-kmin_psi)) + ((Ka_psi/2.0) * sigma_psi_abs_sqrt);
-          bottom_psi = (Ka_psi-kmin_psi) + ((2.0/(Ka_psi*Ka_psi)) * (sigma_psi_abs_sqrt*sign_psi + (1.0/Ka_psi)*integral_1_psi) * (-integral_2_psi));
-          //bottom_psi = (Ka_psi-kmin_psi) + ((2.0/(Ka_psi*Ka_psi)) * (sigma_psi_abs_sqrt*sign_psi + (1.0/Ka_psi)*integral_1_psi) * (integral_2_psi));
-          Ka_dot_psi = top_psi/bottom_psi;
+      if (Ka_psi > kmin_psi){
+        float signvar = sigma_psi_abs - miu_psi;
+        if (signvar == 0){
+          sign_psi_sm = 0;
+        }
+        else {
+          sign_psi_sm = copysign(1,signvar);
+        }
+        Ka_dot_psi = k_psi * sign_psi_sm;
       }
       else{
         Ka_dot_psi = kmin_psi;
       }
 
-      Ka_u = (integral_step)*(Ka_dot_u + Ka_dot_last_u)/2.0 + Ka_u; //integral to get the speed adaptative gain
+      Ka_u = (integral_step)*(Ka_dot_u + Ka_dot_last_u)/2 + Ka_u; //integral to get the speed adaptative gain
       Ka_dot_last_u = Ka_dot_u;
 
-      Ka_psi = (integral_step)*(Ka_dot_psi + Ka_dot_last_psi)/2.0 + Ka_psi; //integral to get the heading adaptative gain
+      Ka_psi = (integral_step)*(Ka_dot_psi + Ka_dot_last_psi)/2 + Ka_psi; //integral to get the heading adaptative gain
       Ka_dot_last_psi = Ka_dot_psi;
 
-      k2_u = Ka_u*Ka_u;
-      x2_dot_u = (k2_u/2.0) * sign_u;
-      x2_u = (integral_step)*(x2_dot_u + x2_dot_last_u)/2.0 + x2_u; //integral for x2
+      sign_u = 0;
+      sign_psi = 0;
+
+      if (sigma_u == 0){
+        sign_u = 0;
+      }
+      else {
+        sign_u = copysign(1,sigma_u);
+      }
+
+      k2_u = epsilon_u*Ka_u;
+      x2_dot_u = -(k2_u) * sign_u;
+      x2_u = (integral_step)*(x2_dot_u + x2_dot_last_u)/2 + x2_u; //integral for x2
       x2_dot_last_u = x2_dot_u;
 
-      ua_u = (2.0 * (-Ka_u) * pow(sigma_u_abs,0.5) * sign_u) - x2_u;
+      ua_u = ((-Ka_u) * pow(sigma_u_abs,0.5) * sign_u) + x2_u;
 
-      k2_psi = Ka_psi*Ka_psi;
-      x2_dot_psi = (k2_psi/2.0) * sign_psi;
-      x2_psi = (integral_step)*(x2_dot_psi + x2_dot_last_psi)/2.0 + x2_psi; //integral for x2
+      if (sigma_psi == 0){
+        sign_psi = 0;
+      }
+      else {
+        sign_psi = copysign(1,sigma_psi);
+      }
+
+      k2_psi = epsilon_psi*Ka_psi;
+      x2_dot_psi = -(k2_psi) * sign_psi;
+      x2_psi = (integral_step)*(x2_dot_psi + x2_dot_last_psi)/2 + x2_psi; //integral for x2
       x2_dot_last_psi = x2_dot_psi;
 
-      ua_psi = (2.0 * (-Ka_psi) * pow(sigma_psi_abs,0.5) * sign_psi) - x2_psi;
+      ua_psi = ((-Ka_psi) * pow(sigma_psi_abs,0.5) * sign_psi) + x2_psi;
 
-      Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
-      Tz = ((lambda_psi * e_psi_dot) - f_psi - ua_psi) / g_psi; //yaw rate moment
+      Tx = ((alpha_u * eidot_u) - f_u - ua_u) / g_u; //surge force
+      Tz = ((alpha_psi * eidot_p) + (beta_psi * e_psi_dot) - f_psi - ua_psi) / g_psi; //yaw rate moment
       
       if (Tx > 73){
         Tx = 73;
@@ -342,35 +393,31 @@ public:
       if (u_d == 0){
         Tx = 0;
         Tz = 0;
-        Ka_u = kmin_u*2.0;
+        Ka_u = 0;
         Ka_dot_last_u = 0;
-        Ka_psi = kmin_psi*2.0;
+        Ka_psi = 0;
         Ka_dot_last_psi = 0;
         x2_u = 0;
         x2_psi = 0;
         x2_dot_last_u = 0;
         x2_dot_last_psi = 0;
-        e_u_int = 0;
-        e_u_last = 0;
         o_dot_dot = 0;
         o_dot = 0;
         o = 0;
         o_last = 0;
         o_dot_last = 0;
         o_dot_dot_last = 0;
-        integral_1_u = 0;
-        integral_2_u = 0;
-        integral_1_psi = 0;
-        integral_2_psi = 0;
-        integral_1_u_dot_last = 0;
-        integral_2_u_dot_last = 0;
-        integral_1_psi_dot_last = 0;
-        integral_2_psi_dot_last = 0;
         psi_d_last = theta;
+        ei_u = -e_u/alpha_u;
+        eidot_u_last = 0;
+        ei_p = -(e_psi_dot + beta_psi*e_psi)/alpha_psi;
+        eidot_p_last = 0;
+        starting = 1;
+        delayed_start = 1;
       }
 
-      port_t = (Tx / 2.0) + (Tz / B);
-      starboard_t = (Tx / (2.0*c)) - (Tz / (B*c));
+      port_t = (Tx / 2) + (Tz / B);
+      starboard_t = (Tx / (2*c)) - (Tz / (B*c));
 
       if (starboard_t > 36.5){
         starboard_t = 36.5;
@@ -440,12 +487,14 @@ private:
   ros::Subscriber local_vel_sub;
   ros::Subscriber flag_sub;
   ros::Subscriber ardu_sub;
+  ros::Subscriber desired_trajectory_sub;
+
 };
 
 // Main
 int main(int argc, char *argv[])
 {
-  ros::init(argc, argv, "simpl_adaptive_super_twisting");
+  ros::init(argc, argv, "aitst");
   AdaptiveSuperTwistingControl adaptiveSuperTwistingControl;
   int rate = 100;
   ros::Rate loop_rate(rate);

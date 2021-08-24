@@ -1,0 +1,21 @@
+<launch>
+
+    <node name="aitst" pkg="sensors" type="aitst" >
+    <param name = "k_u" value = "0.2" />
+	<param name = "k_psi" value = "1" />
+	<param name = "kmin_u" value = "0.01" />
+	<param name = "kmin_psi" value = "0.1" />
+	<param name = "epsilon_u" value = "0.02" />
+    <param name = "epsilon_psi" value = "0.02" />
+	<param name = "mu_u" value = "0.05" />
+	<param name = "mu_psi" value = "0.05" />
+	<param name = "alpha_u" value = "0.8" />
+	<param name = "alpha_psi" value = "0.1" />
+	<param name = "beta_psi" value = "1" /> 
+	<param name = "p_u" value = "5" />
+	<param name = "p_psi" value = "5" />
+	<param name = "q_u" value = "3" />
+	<param name = "q_psi" value = "3" />
+    </node>
+
+</launch>
