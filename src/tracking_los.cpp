@@ -150,6 +150,10 @@ public:
         u = 0.001;
       }
       beta = std::atan2(v,u);
+      if (u <= 0.4){
+        beta = 0.0;
+      }
+      
       psi_d = gamma_p + std::atan(-y_e/Delta_L) - beta;
       
       if (u_d > 1.0){

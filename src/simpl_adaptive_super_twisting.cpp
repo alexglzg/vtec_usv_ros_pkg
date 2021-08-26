@@ -159,13 +159,37 @@ public:
     testing = 0;
     arduino = 0;
 
+    sqrt_of_2 = pow(2.0,0.5);
+    Tx = 0;
+    Tz = 0;
+    Ka_u = kmin_u*2.0;
+    Ka_dot_last_u = 0;
+    Ka_psi = kmin_psi*2.0;
+    Ka_dot_last_psi = 0;
     x2_u = 0;
     x2_psi = 0;
     x2_dot_u = 0;
     x2_dot_psi = 0;
     x2_dot_last_u = 0;
     x2_dot_last_psi = 0;
-    sqrt_of_2 = pow(2.0,0.5);
+    e_u_int = 0;
+    e_u_last = 0;
+    o_dot_dot = 0;
+    o_dot = 0;
+    o = 0;
+    o_last = 0;
+    o_dot_last = 0;
+    o_dot_dot_last = 0;
+    integral_1_u = 0;
+    integral_2_u = 0;
+    integral_1_psi = 0;
+    integral_2_psi = 0;
+    integral_1_u_dot_last = 0;
+    integral_2_u_dot_last = 0;
+    integral_1_psi_dot_last = 0;
+    integral_2_psi_dot_last = 0;
+    psi_d_last = theta;
+
 
   }
 
