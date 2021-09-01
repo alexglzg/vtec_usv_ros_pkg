@@ -99,6 +99,14 @@ public:
   float Ka_dot_last_y;
   float ua_x;
   float ua_y;
+  float k2_x;
+  float k2_y;
+  float x2_x;
+  float x2_y;
+  float x2_dot_x;
+  float x2_dot_y;
+  float x2_dot_last_x;
+  float x2_dot_last_y;
 
   float Tx;
   float Tz;
@@ -110,14 +118,22 @@ public:
   float Ka_dot_last_r;
   float ua_u;
   float ua_r;
+  float k2_u;
+  float k2_r;
+  float x2_u;
+  float x2_r;
+  float x2_dot_u;
+  float x2_dot_r;
+  float x2_dot_last_u;
+  float x2_dot_last_r;
 
   //Controller gains
   float k_x;
   float k_y;
   float kmin_x;
   float kmin_y;
-  float k2_x;
-  float k2_y;
+  float epsilon_x;
+  float epsilon_y;
   float mu_x;
   float mu_y;
   float lambda_x;
@@ -127,8 +143,8 @@ public:
   float k_r;
   float kmin_u;
   float kmin_r;
-  float k2_u;
-  float k2_r;
+  float epsilon_u;
+  float epsilon_r;
   float mu_u;
   float mu_r;
   float lambda_u;
@@ -168,20 +184,20 @@ public:
     //ROS Publishers for each required sensor data
     right_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/right_thruster", 1000);
     left_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/left_thruster", 1000);
-    speed_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/speed_gain", 1000);
+    speed_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/ast/speed_gain", 1000);
     speed_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/speed_error", 1000);
-    speed_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/speed_sigma", 1000);
-    heading_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/heading_sigma", 1000);
-    heading_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/heading_gain", 1000);
+    speed_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/ast/speed_sigma", 1000);
+    heading_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/ast/heading_sigma", 1000);
+    heading_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/ast/heading_gain", 1000);
     heading_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/heading_error", 1000);
     control_input_pub = n.advertise<geometry_msgs::Pose2D>("/usv_control/controller/control_input", 1000);
     desired_speed_pub = n.advertise<std_msgs::Float64>("/guidance/desired_speed", 1000);
     desired_heading_pub = n.advertise<std_msgs::Float64>("/guidance/desired_heading", 1000);
-    x_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/x_gain", 1000);
+    x_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/ast/x_gain", 1000);
     x_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/x_error", 1000);
-    x_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/x_sigma", 1000);
-    y_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/y_sigma", 1000);
-    y_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/y_gain", 1000);
+    x_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/ast/x_sigma", 1000);
+    y_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/ast/y_sigma", 1000);
+    y_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/ast/y_gain", 1000);
     y_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/y_error", 1000);
 
     //ROS Subscribers
@@ -196,8 +212,8 @@ public:
     static const float dk_y = 0.05;
     static const float dkmin_x = 0.01;
     static const float dkmin_y = 0.01;
-    static const float dk2_x = 0.01;
-    static const float dk2_y = 0.01;
+    static const float depsilon_x = 0.01;
+    static const float depsilon_y = 0.01;
     static const float dmu_x = 0.05;
     static const float dmu_y = 0.05;
     static const float dlambda_x = 0.001;
@@ -206,33 +222,33 @@ public:
     static const float dk_r = 0.2;
     static const float dkmin_u = 0.01;
     static const float dkmin_r = 0.01;
-    static const float dk2_u = 0.01;
-    static const float dk2_r = 0.01;
+    static const float depsilon_u = 0.01;
+    static const float depsilon_r = 0.01;
     static const float dmu_u = 0.02;
     static const float dmu_r = 0.02;
     static const float dlambda_u = 0.001;
     static const float dlambda_r = 0.001;
 
-    n.param("/tracking_asmc/k_x", k_x, dk_x);
-    n.param("/tracking_asmc/k_y", k_y, dk_y);
-    n.param("/tracking_asmc/kmin_x", kmin_x, dkmin_x);
-    n.param("/tracking_asmc/kmin_y", kmin_y, dkmin_y);
-    n.param("/tracking_asmc/k2_x", k2_x, dk2_x);
-    n.param("/tracking_asmc/k2_y", k2_y, dk2_y);
-    n.param("/tracking_asmc/mu_x", mu_x, dmu_x);
-    n.param("/tracking_asmc/mu_y", mu_y, dmu_y);
-    n.param("/tracking_asmc/lambda_x", lambda_x, dlambda_x);
-    n.param("/tracking_asmc/lambda_y", lambda_y, dlambda_y);
-    n.param("/tracking_asmc/k_u", k_u, dk_u);
-    n.param("/tracking_asmc/k_r", k_r, dk_r);
-    n.param("/tracking_asmc/kmin_u", kmin_u, dkmin_u);
-    n.param("/tracking_asmc/kmin_r", kmin_r, dkmin_r);
-    n.param("/tracking_asmc/k2_u", k2_u, dk2_u);
-    n.param("/tracking_asmc/k2_r", k2_r, dk2_r);
-    n.param("/tracking_asmc/mu_u", mu_u, dmu_u);
-    n.param("/tracking_asmc/mu_r", mu_r, dmu_r);
-    n.param("/tracking_asmc/lambda_u", lambda_u, dlambda_u);
-    n.param("/tracking_asmc/lambda_r", lambda_r, dlambda_r);
+    n.param("/tracking_ast/k_x", k_x, dk_x);
+    n.param("/tracking_ast/k_y", k_y, dk_y);
+    n.param("/tracking_ast/kmin_x", kmin_x, dkmin_x);
+    n.param("/tracking_ast/kmin_y", kmin_y, dkmin_y);
+    n.param("/tracking_ast/epsilon_x", epsilon_x, depsilon_x);
+    n.param("/tracking_ast/epsilon_y", epsilon_y, depsilon_y);
+    n.param("/tracking_ast/mu_x", mu_x, dmu_x);
+    n.param("/tracking_ast/mu_y", mu_y, dmu_y);
+    n.param("/tracking_ast/lambda_x", lambda_x, dlambda_x);
+    n.param("/tracking_ast/lambda_y", lambda_y, dlambda_y);
+    n.param("/tracking_ast/k_u", k_u, dk_u);
+    n.param("/tracking_ast/k_r", k_r, dk_r);
+    n.param("/tracking_ast/kmin_u", kmin_u, dkmin_u);
+    n.param("/tracking_ast/kmin_r", kmin_r, dkmin_r);
+    n.param("/tracking_ast/epsilon_u", epsilon_u, depsilon_u);
+    n.param("/tracking_ast/epsilon_r", epsilon_r, depsilon_r);
+    n.param("/tracking_ast/mu_u", mu_u, dmu_u);
+    n.param("/tracking_ast/mu_r", mu_r, dmu_r);
+    n.param("/tracking_ast/lambda_u", lambda_u, dlambda_u);
+    n.param("/tracking_ast/lambda_r", lambda_r, dlambda_r);
 
     g_u = (1 / (m - X_u_dot));
     g_r = (1 / (Iz - N_r_dot));
@@ -350,7 +366,11 @@ public:
       else {
         sign_sx = copysign(1,s_x);
       }
-      ua_x = ((-Ka_x) * pow(std::abs(s_x),0.5) * sign_sx) - (k2_x*s_x);
+      k2_x = epsilon_x*Ka_x;
+      x2_dot_x = -(k2_x) * sign_sx;
+      x2_x = (integral_step)*(x2_dot_x + x2_dot_last_x)/2 + x2_x; //integral for x2
+      x2_dot_last_x = x2_dot_x;
+      ua_x = ((-Ka_x) * pow(std::abs(s_x),0.5) * sign_sx) + x2_x;
 
       if (s_y == 0){
         sign_sy = 0;
@@ -358,7 +378,11 @@ public:
       else {
         sign_sy = copysign(1,s_y);
       }
-      ua_y = ((-Ka_y) * pow(std::abs(s_y),0.5) * sign_sy) - (k2_y*s_y);
+      k2_y = epsilon_y*Ka_y;
+      x2_dot_y = -(k2_y) * sign_sy;
+      x2_y = (integral_step)*(x2_dot_y + x2_dot_last_y)/2 + x2_y; //integral for x2
+      x2_dot_last_y = x2_dot_y;
+      ua_y = ((-Ka_y) * pow(std::abs(s_y),0.5) * sign_sy) + x2_y;
 
       ua_xi << ua_x,
               ua_y;
@@ -441,7 +465,11 @@ public:
       else {
         sign_su = copysign(1,s_u);
       }
-      ua_u = ((-Ka_u) * pow(std::abs(s_u),0.5) * sign_su) - (k2_u*s_u);
+      k2_u = epsilon_u*Ka_u;
+      x2_dot_u = -(k2_u) * sign_su;
+      x2_u = (integral_step)*(x2_dot_u + x2_dot_last_u)/2 + x2_u; //integral for x2
+      x2_dot_last_u = x2_dot_u;
+      ua_u = ((-Ka_u) * pow(std::abs(s_u),0.5) * sign_su) + x2_u;
 
       if (s_r == 0){
         sign_sr = 0;
@@ -449,7 +477,11 @@ public:
       else {
         sign_sr = copysign(1,s_r);
       }
-      ua_r = ((-Ka_r) * pow(std::abs(s_r),0.5) * sign_sr) - (k2_r*s_r);
+      k2_r = epsilon_r*Ka_r;
+      x2_dot_r = -(k2_r) * sign_sr;
+      x2_r = (integral_step)*(x2_dot_r + x2_dot_last_r)/2 + x2_r; //integral for x2
+      x2_dot_last_r = x2_dot_r;
+      ua_r = ((-Ka_r) * pow(std::abs(s_r),0.5) * sign_sr) + x2_r;
 
       Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
       Tz = ((lambda_r * e_r) - f_r - ua_r) / g_r; //yaw rate moment
@@ -488,6 +520,14 @@ public:
         e_u_last = 0;
         ei_r = 0;
         e_r_last = 0;
+        x2_x = 0;
+        x2_y = 0;
+        x2_dot_last_x = 0;
+        x2_dot_last_y = 0;
+        x2_u = 0;
+        x2_r = 0;
+        x2_dot_last_u = 0;
+        x2_dot_last_r = 0;
       }
 
       port_t = (Tx / 2) + (Tz / B);
@@ -584,7 +624,7 @@ private:
 // Main
 int main(int argc, char *argv[])
 {
-  ros::init(argc, argv, "tracking_asmc");
+  ros::init(argc, argv, "tracking_ast");
   AdaptiveSlidingModeControl adaptiveSlidingModeControl;
   int rate = 100;
   ros::Rate loop_rate(rate);
