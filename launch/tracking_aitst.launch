@@ -5,8 +5,8 @@
 	<param name = "k_y" value = "0.02" />
 	<param name = "kmin_x" value = "0.001" />
 	<param name = "kmin_y" value = "0.001" />
-	<param name = "epsilon_x" value = "0.01" />
-    <param name = "epsilon_y" value = "0.01" />
+	<param name = "epsilon_x" value = "0.05" />
+    <param name = "epsilon_y" value = "0.05" />
 	<param name = "mu_x" value = "0.1" />
 	<param name = "mu_y" value = "0.1" />
 	<param name = "tc_x" value = "8" />
@@ -16,12 +16,12 @@
     <param name = "p_x" value = "5" />
 	<param name = "p_y" value = "5" />
 
-    <param name = "k_u" value = "0.1" />
-	<param name = "k_r" value = "0.1" />
+    <param name = "k_u" value = "0.2" />
+	<param name = "k_r" value = "0.2" />
 	<param name = "kmin_u" value = "0.01" />
 	<param name = "kmin_r" value = "0.01" />
-	<param name = "epsilon_u" value = "0.01" />
-    <param name = "epsilon_r" value = "0.01" />
+	<param name = "epsilon_u" value = "0.05" />
+    <param name = "epsilon_r" value = "0.05" />
 	<param name = "mu_u" value = "0.1" />
 	<param name = "mu_r" value = "0.1" />
 	<param name = "tc_u" value = "3" />
