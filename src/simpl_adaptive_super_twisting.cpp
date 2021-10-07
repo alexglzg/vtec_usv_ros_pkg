@@ -6,7 +6,7 @@
 #include "geometry_msgs/Vector3.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/UInt8.h"
-
+#include <ros/console.h>
 
 class AdaptiveSuperTwistingControl
 {
@@ -34,6 +34,7 @@ public:
   float e_u_int;
   float e_u_last;
   float psi_d_last;
+  float u_abs;
 
   //Model pysical parameters
   float Xu;
@@ -47,6 +48,23 @@ public:
   static const float B = 0.41;
   static const float c = 0.78;
   float sqrt_of_2;
+  float g_u;
+  float g_psi;
+  float f_u;
+  float f_psi;
+  float e_u;
+  float e_psi;
+  float psi_d_dif;
+  float r_d;
+  float e_psi_dot;
+  float sigma_u;
+  float sigma_psi;
+  float sigma_u_abs;
+  float sigma_psi_abs;
+  float sigma_u_abs_sqrt;
+  float sigma_psi_abs_sqrt;
+  int sign_u;
+  int sign_psi;
   
   float Tx;
   float Tz;
@@ -73,9 +91,9 @@ public:
   float o_last;
   float o_dot_last;
   float o_dot_dot_last;
-  static const float f1 = 2;
-  static const float f2 = 2;
-  static const float f3 = 2;
+  static const float f1 = 2.0;
+  static const float f2 = 2.0;
+  static const float f3 = 2.0;
 
   float integral_1_u;
   float integral_2_u;
@@ -122,10 +140,10 @@ public:
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSuperTwistingControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &AdaptiveSuperTwistingControl::arduinoCallback, this);
 
-    static const float dk_u = 0.005;
-    static const float dk_psi = 0.005;
-    static const float dkmin_u = 0.01;
-    static const float dkmin_psi = 0.01;
+    static const float dk_u = 0.02;
+    static const float dk_psi = 0.02;
+    static const float dkmin_u = 0.008;
+    static const float dkmin_psi = 0.008;
     static const float dlambda_u = 0.001;
     static const float dlambda_psi = 1;
 
@@ -141,13 +159,37 @@ public:
     testing = 0;
     arduino = 0;
 
+    sqrt_of_2 = pow(2.0,0.5);
+    Tx = 0;
+    Tz = 0;
+    Ka_u = kmin_u*2.0;
+    Ka_dot_last_u = 0;
+    Ka_psi = kmin_psi*2.0;
+    Ka_dot_last_psi = 0;
     x2_u = 0;
     x2_psi = 0;
     x2_dot_u = 0;
     x2_dot_psi = 0;
     x2_dot_last_u = 0;
     x2_dot_last_psi = 0;
-    sqrt_of_2 = pow(2,0.5);
+    e_u_int = 0;
+    e_u_last = 0;
+    o_dot_dot = 0;
+    o_dot = 0;
+    o = 0;
+    o_last = 0;
+    o_dot_last = 0;
+    o_dot_dot_last = 0;
+    integral_1_u = 0;
+    integral_2_u = 0;
+    integral_1_psi = 0;
+    integral_2_psi = 0;
+    integral_1_u_dot_last = 0;
+    integral_2_u_dot_last = 0;
+    integral_1_psi_dot_last = 0;
+    integral_2_psi_dot_last = 0;
+    psi_d_last = theta;
+
 
   }
 
@@ -188,122 +230,122 @@ public:
     if (testing == 1 && arduino == 1){
       Xu = -25;
       Xuu = 0;
-      float u_abs = std::abs(u);
+      u_abs = std::abs(u);
       if (u_abs > 1.2){
         Xu = 64.55;
         Xuu = -70.92;
       }
 
-      Nr = (-0.52)*pow(pow(u,2) + pow(v,2),0.5);
+      Nr = (-0.52)*pow(pow(u,2.0) + pow(v,2.0),0.5);
 
-      float g_u = (1 / (m - X_u_dot));
-      float g_psi = (1 / (Iz - N_r_dot));
+      g_u = (1 / (m - X_u_dot));
+      g_psi = (1 / (Iz - N_r_dot));
 
-      float f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
-      float f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
+      f_u = (((m - Y_v_dot)*v*r + (Xuu*u_abs*u + Xu*u)) / (m - X_u_dot));
+      f_psi = (((-X_u_dot + Y_v_dot)*u*v + (Nr*r)) / (Iz - N_r_dot));
 
-      float e_u = u_d - u;
-      float e_psi = psi_d - theta;
+      e_u = u_d - u;
+      e_psi = psi_d - theta;
       if (std::abs(e_psi) > 3.141592){
-          e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi) - 2*3.141592);
+          e_psi = (e_psi/std::abs(e_psi))*(std::abs(e_psi) - 2.0*3.141592);
       }
-      e_u_int = (integral_step)*(e_u + e_u_last)/2 + e_u_int; //integral of the surge speed error
+      e_u_int = (integral_step)*(e_u + e_u_last)/2.0 + e_u_int; //integral of the surge speed error
       e_u_last = e_u;
 
-      float psi_d_dif = psi_d - psi_d_last;
+      psi_d_dif = psi_d - psi_d_last;
       if (std::abs(psi_d_dif) > 3.141592){
-          psi_d_dif = (psi_d_dif/std::abs(psi_d_dif))*(std::abs(psi_d_dif) - 2*3.141592);
+          psi_d_dif = (psi_d_dif/std::abs(psi_d_dif))*(std::abs(psi_d_dif) - 2.0*3.141592);
       }
-      float r_d = (psi_d_dif) / integral_step;
+      r_d = (psi_d_dif) / integral_step;
       psi_d_last = psi_d;
       o_dot_dot = (((r_d - o_last) * f1) - (f3 * o_dot_last)) * f2;
-      o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2 + o_dot;
-      o = (integral_step)*(o_dot + o_dot_last)/2 + o;
+      o_dot = (integral_step)*(o_dot_dot + o_dot_dot_last)/2.0 + o_dot;
+      o = (integral_step)*(o_dot + o_dot_last)/2.0 + o;
       r_d = o;
       o_last = o;
       o_dot_last = o_dot;
       o_dot_dot_last = o_dot_dot;
 
-      float e_psi_dot = r_d - r;
+      e_psi_dot = r_d - r;
 
-      //float e_psi_dot = 0 - r;
-
-      float sigma_u = e_u + lambda_u * e_u_int;
-      float sigma_psi = e_psi_dot + lambda_psi * e_psi;
+      sigma_u = e_u + lambda_u * e_u_int;
+      sigma_psi = e_psi_dot + lambda_psi * e_psi;
       
-      float sigma_u_abs = std::abs(sigma_u);
-      float sigma_psi_abs = std::abs(sigma_psi);
+      sigma_u_abs = std::abs(sigma_u);
+      sigma_psi_abs = std::abs(sigma_psi);
 
-      float sigma_u_abs_sqrt = pow(sigma_u_abs,0.5);
-      float sigma_psi_abs_sqrt = pow(sigma_psi_abs,0.5);
-
-      int sign_u = 0;
-      int sign_psi = 0;
+      sigma_u_abs_sqrt = pow(sigma_u_abs,0.5);
+      sigma_psi_abs_sqrt = pow(sigma_psi_abs,0.5);
 
       if (sigma_u == 0){
         sign_u = 0;
       }
-      else {
+      else{
         sign_u = copysign(1,sigma_u);
       }
 
       if (sigma_psi == 0){
         sign_psi = 0;
       }
-      else {
+      else{
         sign_psi = copysign(1,sigma_psi);
       }
 
+      integral_1_u_dot = Ka_u*Ka_u*sign_u;
+      integral_2_u_dot = (Ka_u*Ka_u/2.0)*sign_u;
+      integral_1_u = (integral_step)*(integral_1_u_dot + integral_1_u_dot_last)/2.0 + integral_1_u;
+      integral_1_u_dot_last = integral_1_u_dot;
+      integral_2_u = (integral_step)*(integral_2_u_dot + integral_2_u_dot_last)/2.0 + integral_2_u;
+      integral_2_u_dot_last = integral_2_u_dot;
+      //ROS_FATAL_STREAM("integral_1_u = " << integral_1_u);
+      //ROS_FATAL_STREAM("integral_2_u = " << integral_2_u);
 
       if (Ka_u >= kmin_u){
-          top_u = -((k_u/sqrt_of_2) * std::abs(Ka_u-kmin_u)) + ((Ka_u/2) * sigma_u_abs_sqrt);
-          integral_1_u_dot = Ka_u*Ka_u*sign_u;
-          integral_2_u_dot = (Ka_u*Ka_u/2)*sign_u;
-          integral_1_u = (integral_step)*(integral_1_u_dot + integral_1_u_dot_last)/2 + integral_1_u;
-          integral_1_u_dot_last = integral_1_u_dot;
-          integral_2_u = (integral_step)*(integral_2_u_dot + integral_2_u_dot_last)/2 + integral_2_u;
-          integral_2_u_dot_last = integral_2_u_dot;
-          bottom_u = (Ka_u-kmin_u) + (2/(Ka_u*Ka_u)) * (sigma_u_abs_sqrt*sign_u + (1/Ka_u)*integral_1_u) * (-integral_2_u);
+          top_u = ((-k_u/sqrt_of_2) * std::abs(Ka_u-kmin_u)) + ((Ka_u/2.0) * sigma_u_abs_sqrt);
+          bottom_u = (Ka_u-kmin_u) + ((2.0/(Ka_u*Ka_u)) * (sigma_u_abs_sqrt*sign_u + (1.0/Ka_u)*integral_1_u) * (-integral_2_u));
+          //bottom_u = (Ka_u-kmin_u) + ((2.0/(Ka_u*Ka_u)) * (sigma_u_abs_sqrt*sign_u + (1.0/Ka_u)*integral_1_u) * (integral_2_u));
           Ka_dot_u = top_u/bottom_u;
       }
       else{
         Ka_dot_u = kmin_u;
       } 
 
+      integral_1_psi_dot = Ka_psi*Ka_psi*sign_psi;
+      integral_2_psi_dot = (Ka_psi*Ka_psi/2.0)*sign_psi;
+      integral_1_psi = (integral_step)*(integral_1_psi_dot + integral_1_psi_dot_last)/2.0 + integral_1_psi;
+      integral_1_psi_dot_last = integral_1_psi_dot;
+      integral_2_psi = (integral_step)*(integral_2_psi_dot + integral_2_psi_dot_last)/2.0 + integral_2_psi;
+      integral_2_psi_dot_last = integral_2_psi_dot;
+
       if (Ka_psi >= kmin_psi){
-          top_psi = -((k_psi/sqrt_of_2) * std::abs(Ka_psi-kmin_psi)) + ((Ka_psi/2) * sigma_psi_abs_sqrt);
-          integral_1_psi_dot = Ka_psi*Ka_psi*sign_psi;
-          integral_2_psi_dot = (Ka_psi*Ka_psi/2)*sign_psi;
-          integral_1_psi = (integral_step)*(integral_1_psi_dot + integral_1_psi_dot_last)/2 + integral_1_psi;
-          integral_1_psi_dot_last = integral_1_psi_dot;
-          integral_2_psi = (integral_step)*(integral_2_psi_dot + integral_2_psi_dot_last)/2 + integral_2_psi;
-          integral_2_psi_dot_last = integral_2_psi_dot;
-          bottom_psi = (Ka_psi-kmin_psi) + (2/(Ka_psi*Ka_psi)) * (sigma_psi_abs_sqrt*sign_psi + (1/Ka_psi)*integral_1_psi) * (-integral_2_psi);
+          top_psi = ((-k_psi/sqrt_of_2) * std::abs(Ka_psi-kmin_psi)) + ((Ka_psi/2.0) * sigma_psi_abs_sqrt);
+          bottom_psi = (Ka_psi-kmin_psi) + ((2.0/(Ka_psi*Ka_psi)) * (sigma_psi_abs_sqrt*sign_psi + (1.0/Ka_psi)*integral_1_psi) * (-integral_2_psi));
+          //bottom_psi = (Ka_psi-kmin_psi) + ((2.0/(Ka_psi*Ka_psi)) * (sigma_psi_abs_sqrt*sign_psi + (1.0/Ka_psi)*integral_1_psi) * (integral_2_psi));
           Ka_dot_psi = top_psi/bottom_psi;
       }
       else{
         Ka_dot_psi = kmin_psi;
       }
 
-      Ka_u = (integral_step)*(Ka_dot_u + Ka_dot_last_u)/2 + Ka_u; //integral to get the speed adaptative gain
+      Ka_u = (integral_step)*(Ka_dot_u + Ka_dot_last_u)/2.0 + Ka_u; //integral to get the speed adaptative gain
       Ka_dot_last_u = Ka_dot_u;
 
-      Ka_psi = (integral_step)*(Ka_dot_psi + Ka_dot_last_psi)/2 + Ka_psi; //integral to get the heading adaptative gain
+      Ka_psi = (integral_step)*(Ka_dot_psi + Ka_dot_last_psi)/2.0 + Ka_psi; //integral to get the heading adaptative gain
       Ka_dot_last_psi = Ka_dot_psi;
 
       k2_u = Ka_u*Ka_u;
-      x2_dot_u = -(k2_u/2) * sign_u;
-      x2_u = (integral_step)*(x2_dot_u + x2_dot_last_u)/2 + x2_u; //integral for x2
+      x2_dot_u = (k2_u/2.0) * sign_u;
+      x2_u = (integral_step)*(x2_dot_u + x2_dot_last_u)/2.0 + x2_u; //integral for x2
       x2_dot_last_u = x2_dot_u;
 
-      ua_u = (2 * (-Ka_u) * pow(sigma_u_abs,0.5) * sign_u) + x2_u;
+      ua_u = (2.0 * (-Ka_u) * pow(sigma_u_abs,0.5) * sign_u) - x2_u;
 
       k2_psi = Ka_psi*Ka_psi;
-      x2_dot_psi = -(k2_psi/2) * sign_psi;
-      x2_psi = (integral_step)*(x2_dot_psi + x2_dot_last_psi)/2 + x2_psi; //integral for x2
+      x2_dot_psi = (k2_psi/2.0) * sign_psi;
+      x2_psi = (integral_step)*(x2_dot_psi + x2_dot_last_psi)/2.0 + x2_psi; //integral for x2
       x2_dot_last_psi = x2_dot_psi;
 
-      ua_psi = (2 * (-Ka_psi) * pow(sigma_psi_abs,0.5) * sign_psi) + x2_psi;
+      ua_psi = (2.0 * (-Ka_psi) * pow(sigma_psi_abs,0.5) * sign_psi) - x2_psi;
 
       Tx = ((lambda_u * e_u) - f_u - ua_u) / g_u; //surge force
       Tz = ((lambda_psi * e_psi_dot) - f_psi - ua_psi) / g_psi; //yaw rate moment
@@ -324,9 +366,9 @@ public:
       if (u_d == 0){
         Tx = 0;
         Tz = 0;
-        Ka_u = 0.05;
+        Ka_u = kmin_u*2.0;
         Ka_dot_last_u = 0;
-        Ka_psi = 0.05;
+        Ka_psi = kmin_psi*2.0;
         Ka_dot_last_psi = 0;
         x2_u = 0;
         x2_psi = 0;
@@ -348,10 +390,11 @@ public:
         integral_2_u_dot_last = 0;
         integral_1_psi_dot_last = 0;
         integral_2_psi_dot_last = 0;
+        psi_d_last = theta;
       }
 
-      port_t = (Tx / 2) + (Tz / B);
-      starboard_t = (Tx / (2*c)) - (Tz / (B*c));
+      port_t = (Tx / 2.0) + (Tz / B);
+      starboard_t = (Tx / (2.0*c)) - (Tz / (B*c));
 
       if (starboard_t > 36.5){
         starboard_t = 36.5;

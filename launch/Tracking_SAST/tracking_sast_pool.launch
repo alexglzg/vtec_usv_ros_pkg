@@ -1,0 +1,16 @@
+<launch>
+
+    <include file="$(find vectornav)/launch/vectornav.launch" />
+
+    <include file="$(find sensors)/launch/sast.launch" />
+
+    <include file="$(find sensors)/launch/ardumotors.launch" />
+
+    <node pkg="sensors" type="tracking_los" name="tracking_los" />
+
+    <node pkg="sensors" type="sast_pool_infinity_trajectory.py" name="sast_pool_infinity_trajectory" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/sast/pool" />
+
+</launch>
