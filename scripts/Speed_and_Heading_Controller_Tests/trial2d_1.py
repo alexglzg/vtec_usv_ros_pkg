@@ -18,8 +18,8 @@ class Test:
         self.ds = 0.0
         self.dh = 0.0
 
-        self.x = 0.0
-        self.y = 0.0
+        self.x_pos = 0.0
+        self.y_pos = 0.0
 
         self.control_input_speed = 0.0
         self.velocity = 0.0
@@ -45,8 +45,8 @@ class Test:
         self.velocity = _vel.x
 
     def ned_callback(self, _ned):
-        self.x = _ned.x
-        self.y = _ned.y
+        self.x_pos = _ned.x
+        self.y_pos = _ned.y
         self.heading = _ned.theta
     
     def flag_callback(self, _flag):
@@ -68,7 +68,7 @@ def main():
     dir_name = os.path.dirname(__file__)
     profile = sio.loadmat(dir_name + '/mat/profile.mat')
     profile = profile['profile']
-    bag = rosbag.Bag(dir_name + '/mat/2d_trial1.bag','w')
+    bag = rosbag.Bag(dir_name + '/mat/trial2d_1.bag','w')
     u_speed = Float64()
     y_speed = Float64()
     r_speed = Float64()
@@ -77,7 +77,7 @@ def main():
     y_heading = Float64()
     r_heading = Float64()
     e_heading = Float64()
-    pos = Pose2D()
+    p_vector = Pose2D()
 
     time.sleep(10)
     rospy.logwarn("Starting")
@@ -86,18 +86,18 @@ def main():
         i = 0
         while (not rospy.is_shutdown()) and (i < len(profile)):
             if (t.flag != 0) and (t.arduino != 0):
-                if (profile[i]*1.25 > 0.01):
+                if (profile[i]*0.75 > 0.01):
                     u_speed.data = t.control_input_speed
                     y_speed.data = t.velocity
-                    r_speed.data = profile[i]*1.25
+                    r_speed.data = profile[i]*0.75
                     e_speed.data = r_speed.data - y_speed.data
                     u_heading.data = t.control_input_heading
                     y_heading.data = t.heading
                     r_heading.data = -profile[i]*1.5
                     e_heading.data = r_heading.data - y_heading.data
-                    pos.x = t.x
-                    pos.y = t.y
-                    pos.theta = t.heading
+                    p_vector.x = t.x_pos
+                    p_vector.y = t.y_pos
+                    p_vector.theta = t.heading
                     bag.write('u_speed', u_speed)
                     bag.write('y_speed', y_speed)
                     bag.write('r_speed', r_speed)
@@ -106,8 +106,8 @@ def main():
                     bag.write('y_heading', y_heading)
                     bag.write('r_heading', r_heading)
                     bag.write('e_heading', e_heading)
-                    bag.write('position', pos)
-                    t.desired(profile[i]*1.25,-profile[i]*1.5)
+                    bag.write('position', p_vector)
+                    t.desired(profile[i]*0.75,-profile[i]*1.5)
                 else:
                     t.desired(0.0,0.0)
                     if i > len(profile)/2:
