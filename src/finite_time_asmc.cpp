@@ -101,7 +101,7 @@ public:
   float Kmin_u;
   float Kmin_r;
 
-  //Fixed-time variables
+  //Finite-time variables
   float L1_u;
   float L1_r;
   float t_c;
