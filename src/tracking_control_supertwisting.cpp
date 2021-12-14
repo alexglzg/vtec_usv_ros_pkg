@@ -78,10 +78,6 @@ public:
   float f_r;
   float g_r;
   
-  float k1_x;
-  float k1_y;
-  float k2_x;
-  float k2_y;
   float x2_x;
   float x2_y;
   float x2_dot_x;
@@ -94,8 +90,10 @@ public:
   float Tz;
 
   //Controller gains
-  float L_x;
-  float L_y;
+  float k1_x;
+  float k1_y;
+  float k2_x;
+  float k2_y;
   float lambda_x;
   float lambda_y;
 
@@ -137,15 +135,19 @@ public:
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSlidingModeControl::flagCallback, this);
     ardu_sub = n.subscribe("arduino", 1000, &AdaptiveSlidingModeControl::arduinoCallback, this);
 
-    static const float dL_x = 0.5;
-    static const float dL_y = 0.5;
+    static const float dk1_x = 1.0;
+    static const float dk1_y = 1.0;
+    static const float dk2_x = 0.1;
+    static const float dk2_y = 0.1;
     static const float dlambda_x = 1.0;
     static const float dlambda_y = 1.0;
 
-    n.param("/tracking_control_sst/L_x", L_x, dL_x);
-    n.param("/tracking_control_sst/L_y", L_y, dL_y);
-    n.param("/tracking_control_sst/lambda_x", lambda_x, dlambda_x);
-    n.param("/tracking_control_sst/lambda_y", lambda_y, dlambda_y);
+    n.param("/tracking_control_supertwisting/k1_x", k1_x, dk1_x);
+    n.param("/tracking_control_supertwisting/k1_y", k1_y, dk1_y);
+    n.param("/tracking_control_supertwisting/k2_x", k2_x, dk2_x);
+    n.param("/tracking_control_supertwisting/k2_y", k2_y, dk2_y);
+    n.param("/tracking_control_supertwisting/lambda_x", lambda_x, dlambda_x);
+    n.param("/tracking_control_supertwisting/lambda_y", lambda_y, dlambda_y);
 
     g_u = (1 / (m - X_u_dot));
     g_r = (1 / (Iz - N_r_dot));
@@ -248,14 +250,10 @@ public:
         sign_sy = copysign(1,s_y);
       }
 
-      k1_x = 2*L_x;
-      k2_x = L_x*L_x/2;
       x2_dot_x = -(k2_x/2) * sign_sx;
       x2_x = (integral_step)*(x2_dot_x + x2_dot_last_x)/2 + x2_x; //integral for x2
       x2_dot_last_x = x2_dot_x;
 
-      k1_y = 2*L_y;
-      k2_y = L_y*L_y/2;
       x2_dot_y = -(k2_y/2) * sign_sy;
       x2_y = (integral_step)*(x2_dot_y + x2_dot_last_y)/2 + x2_y; //integral for x2
       x2_dot_last_y = x2_dot_y;
@@ -372,7 +370,7 @@ private:
 // Main
 int main(int argc, char *argv[])
 {
-  ros::init(argc, argv, "tracking_control_sst");
+  ros::init(argc, argv, "tracking_control_supertwisting");
   AdaptiveSlidingModeControl adaptiveSlidingModeControl;
   int rate = 100;
   ros::Rate loop_rate(rate);
