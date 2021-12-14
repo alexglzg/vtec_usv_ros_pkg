@@ -2,7 +2,7 @@
 
     <include file="$(find vectornav)/launch/vectornav.launch" />
 
-    <include file="$(find sensors)/launch/tracking_control_sast2.launch" />
+    <include file="$(find sensors)/launch/tracking_control_sst.launch" />
 
     <include file="$(find sensors)/launch/ardumotors.launch" />
 
@@ -10,6 +10,6 @@
     <node pkg="sensors" type="sast_pool_infinity_trajectory.py" name="sast_pool_infinity_trajectory" />
     
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_control_sast/pool_sast2" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_control_sast/pool_sst" />
 
 </launch>

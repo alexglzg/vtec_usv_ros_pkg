@@ -1,0 +1,14 @@
+<launch>
+
+    <node name="tracking_control_sast3" pkg="sensors" type="tracking_control_sast3" >
+	<param name = "kmin_x" value = "0.01" />
+	<param name = "kmin_y" value = "0.01" />
+    <param name = "ka_x" value = "0.05" />
+	<param name = "ka_y" value = "0.05" />
+	<param name = "mu_x" value = "0.01" />
+	<param name = "mu_y" value = "0.01" />
+    <param name = "lambda_x" value = "1.0" />
+	<param name = "lambda_y" value = "1.0" />
+    </node>
+
+</launch>

@@ -1,0 +1,10 @@
+<launch>
+
+    <node name="tracking_control_sst" pkg="sensors" type="tracking_control_sst" >
+	<param name = "L_x" value = "0.5" />
+	<param name = "L_y" value = "0.5" />
+    <param name = "lambda_x" value = "1.0" />
+	<param name = "lambda_y" value = "1.0" />
+    </node>
+
+</launch>
