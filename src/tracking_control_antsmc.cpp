@@ -56,6 +56,8 @@ public:
   float s_x;
   float s_y;
 
+  int sign_edx;
+  int sign_edy;
   int sign_x_sm;
   int sign_y_sm;
   int sign_sx;
@@ -103,8 +105,10 @@ public:
   float k2_y;
   float mu_x;
   float mu_y;
-  float lambda_x;
-  float lambda_y;
+  float beta_x;
+  float beta_y;
+  float gamma_x;
+  float gamma_y;
 
   Vector2f u_xi;
   Matrix2f f_1;
@@ -159,19 +163,23 @@ public:
     static const float dk2_y = 0.01;
     static const float dmu_x = 0.05;
     static const float dmu_y = 0.05;
-    static const float dlambda_x = 1.0;
-    static const float dlambda_y = 1.0;
+    static const float dbeta_x = 1.0;
+    static const float dbeta_y = 1.0;
+    static const float dgamma_x = 1.6;
+    static const float dgamma_y = 1.6;
 
-    n.param("/tracking_control_asmc/k_x", k_x, dk_x);
-    n.param("/tracking_control_asmc/k_y", k_y, dk_y);
-    n.param("/tracking_control_asmc/kmin_x", kmin_x, dkmin_x);
-    n.param("/tracking_control_asmc/kmin_y", kmin_y, dkmin_y);
-    n.param("/tracking_control_asmc/k2_x", k2_x, dk2_x);
-    n.param("/tracking_control_asmc/k2_y", k2_y, dk2_y);
-    n.param("/tracking_control_asmc/mu_x", mu_x, dmu_x);
-    n.param("/tracking_control_asmc/mu_y", mu_y, dmu_y);
-    n.param("/tracking_control_asmc/lambda_x", lambda_x, dlambda_x);
-    n.param("/tracking_control_asmc/lambda_y", lambda_y, dlambda_y);
+    n.param("/tracking_control_antsmc/k_x", k_x, dk_x);
+    n.param("/tracking_control_antsmc/k_y", k_y, dk_y);
+    n.param("/tracking_control_antsmc/kmin_x", kmin_x, dkmin_x);
+    n.param("/tracking_control_antsmc/kmin_y", kmin_y, dkmin_y);
+    n.param("/tracking_control_antsmc/k2_x", k2_x, dk2_x);
+    n.param("/tracking_control_antsmc/k2_y", k2_y, dk2_y);
+    n.param("/tracking_control_antsmc/mu_x", mu_x, dmu_x);
+    n.param("/tracking_control_antsmc/mu_y", mu_y, dmu_y);
+    n.param("/tracking_control_antsmc/beta_x", beta_x, dbeta_x);
+    n.param("/tracking_control_antsmc/beta_y", beta_y, dbeta_y);
+    n.param("/tracking_control_antsmc/gamma_x", gamma_x, dgamma_x);
+    n.param("/tracking_control_antsmc/gamma_y", gamma_y, dgamma_y);
 
     g_u = (1 / (m - X_u_dot));
     g_r = (1 / (Iz - N_r_dot));
@@ -264,8 +272,22 @@ public:
       xid_x_ddot = xddot_d - l*sin(psi_d)*r_d_dot - l*cos(psi_d)*r_d*r_d;
       xid_y_ddot = yddot_d + l*cos(psi_d)*r_d_dot - l*sin(psi_d)*r_d*r_d;
 
-      s_x = e_x_dot + lambda_x*e_x;
-      s_y = e_y_dot + lambda_y*e_y;
+      if (e_x_dot == 0){
+        sign_edx = 0;
+      }
+      else {
+        sign_edx = copysign(1,e_x_dot);
+      }
+
+      if (e_y_dot == 0){
+        sign_edy = 0;
+      }
+      else {
+        sign_edy = copysign(1,e_y_dot);
+      }
+
+      s_x = e_x + beta_x * pow(std::abs(e_x_dot),gamma_x) * sign_edx;
+      s_y = e_y + beta_y * pow(std::abs(e_y_dot),gamma_y) * sign_edy;
 
       if (Ka_x > kmin_x){
           float signvar = std::abs(s_x) - mu_x;
@@ -320,8 +342,8 @@ public:
       ua_xi << ua_x,
               ua_y;
 
-      lambda_e_xi_dot << lambda_x * e_x,
-                       lambda_y * e_y;
+      lambda_e_xi_dot << (1.0/(beta_x * gamma_x)) * pow(std::abs(e_x_dot),(2 - gamma_x)) * sign_edx,
+                       (1.0/(beta_y * gamma_y)) * pow(std::abs(e_y_dot),(2 - gamma_y)) * sign_edy;
 
       g_xi << g_u*cos(psi), -g_r*sin(psi),
            g_u*sin(psi), g_r*cos(psi);
@@ -439,7 +461,7 @@ private:
 // Main
 int main(int argc, char *argv[])
 {
-  ros::init(argc, argv, "tracking_control_asmc");
+  ros::init(argc, argv, "tracking_control_antsmc");
   AdaptiveSlidingModeControl adaptiveSlidingModeControl;
   int rate = 100;
   ros::Rate loop_rate(rate);
