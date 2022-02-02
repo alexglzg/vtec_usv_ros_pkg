@@ -72,11 +72,11 @@ def main():
         i = 0
         while (not rospy.is_shutdown()) and (i < xd.shape[1]):
             x = xd[0,i]
-            y = yd[0,i]
+            y = ((yd[0,i]+8)*(15/7)) - 16
             x_dot = xddot[0,i]
-            y_dot = yddot[0,i]
+            y_dot = yddot[0,i]*(15/7)
             x_ddot = xdddot[0,i]
-            y_ddot = ydddot[0,i]
+            y_ddot = ydddot[0,i]*(15/7)
             if i < 2:
                 s = 1
             else:
