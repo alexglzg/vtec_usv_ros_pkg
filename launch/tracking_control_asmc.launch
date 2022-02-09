@@ -2,14 +2,14 @@
 
     <!--node name="finite_time_tracking_control_asmc" pkg="sensors" type="finite_time_tracking_control_asmc"-->
     <node name="tracking_control_asmc" pkg="sensors" type="tracking_control_asmc">
-    <param name = "k_x" value = "0.05" />
-	<param name = "k_y" value = "0.05" />
+    <param name = "k_x" value = "0.1" />
+	<param name = "k_y" value = "0.1" />
 	<param name = "kmin_x" value = "0.01" />
 	<param name = "kmin_y" value = "0.01" />
-	<param name = "k2_x" value = "0.001" />
-    <param name = "k2_y" value = "0.001" />
-	<param name = "mu_x" value = "0.15" />
-	<param name = "mu_y" value = "0.15" />
+	<param name = "k2_x" value = "0.01" />
+    <param name = "k2_y" value = "0.01" />
+	<param name = "mu_x" value = "0.05" />
+	<param name = "mu_y" value = "0.05" />
     <param name = "lambda_x" value = "1.0" />
 	<param name = "lambda_y" value = "1.0" />
     <!--param name = "tc_x" value = "10.0" /-->
