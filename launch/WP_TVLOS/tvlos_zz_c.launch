@@ -1,10 +1,8 @@
 <launch>
 
-    <node pkg="sensors" type="ins_2d" name="ins_2d" />
+    <include file="$(find vectornav)/launch/vectornav.launch" />
 
-    <node pkg="rosserial_python" type="serial_node.py" name="serial_node" args = "/dev/ttyUSB1" />
-
-    <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
+    <include file="$(find sensors)/launch/ardumotors.launch" />
 
     <node pkg="sensors" type="waypoints3.py" name="waypoints3" />
 

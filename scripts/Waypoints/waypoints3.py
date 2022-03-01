@@ -17,11 +17,12 @@ class Test:
 
 def main():
     rospy.init_node('waypoints3', anonymous=False)
-    rate = rospy.Rate(20) # 100hz
+    rate = rospy.Rate(100) # 100hz
     t = Test()
     path_array = Float32MultiArray()
     path_array.layout.data_offset = 9
     path_array.data = [2,2,6,-15,1,-25,6,-35, 0]
+    time.sleep(8)
     while not rospy.is_shutdown() and t.testing:
         time.sleep(1)
         start_time = rospy.Time.now().secs
