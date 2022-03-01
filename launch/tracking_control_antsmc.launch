@@ -11,8 +11,8 @@
 	<param name = "mu_y" value = "0.05" />
     <param name = "beta_x" value = "1.0" />
 	<param name = "beta_y" value = "1.0" />
-    <param name = "gamma_x" value = "1.9" />
-	<param name = "gamma_y" value = "1.9" />
+    <param name = "gamma_x" value = "1.6" />
+	<param name = "gamma_y" value = "1.6" />
     </node>
 
 </launch>
