@@ -1,0 +1,12 @@
+<launch>
+
+    <node name="tracking_control_supertwisting" pkg="sensors" type="tracking_control_supertwisting">
+    <param name = "k1_x" value = "0.1" />
+	<param name = "k1_y" value = "0.1" />
+    <param name = "k2_x" value = "0.1" />
+	<param name = "k2_y" value = "0.1" />
+    <param name = "lambda_x" value = "1.0" />
+	<param name = "lambda_y" value = "1.0" />
+    </node>
+
+</launch>
