@@ -3,7 +3,7 @@
 
     <include file="$(find sensors)/launch/tracking_control_fxteso_antsm.launch" />
 
-    <node pkg="sensors" type="pool_trajectory_2.py" name="pool_trajectory_2" />
+    <node pkg="sensors" type="fxteso_pool_trajectory.py" name="fxteso_pool_trajectory" />
 
     <include file="$(find sensors)/launch/usv_simulation.launch" />
 

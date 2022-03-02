@@ -490,7 +490,7 @@ public:
         sign_ey_est = copysign(1,ey_est);
       }
 
-      x3x_est_dot = G3*pow(std::abs(ex_est),alpha_1)*sign_ex_est + G3*pow(ex_est,alpha_2)*sign_ex_est;
+      x3x_est_dot = G3*pow(std::abs(ex_est),alpha_1)*sign_ex_est + G3*pow(std::abs(ex_est),alpha_2)*sign_ex_est;
       x3x_est = (integral_step)*(x3x_est_dot + x3x_est_dot_last)/2 + x3x_est;
       x3x_est_dot_last = x3x_est_dot;
       x2x_est_dot = x3x_est + G2*pow(std::abs(ex_est),(alpha_1+1)/2)*sign_ex_est + G2*pow(std::abs(ex_est),(alpha_2+1)/2)*sign_ex_est + f_xi(0) + gu_xi(0);
@@ -500,7 +500,7 @@ public:
       x1x_est = (integral_step)*(x1x_est_dot + x1x_est_dot_last)/2 + x1x_est;
       x1x_est_dot_last = x1x_est_dot;
 
-      x3y_est_dot = G3*pow(std::abs(ey_est),alpha_1)*sign_ey_est + G3*pow(ey_est,alpha_2)*sign_ey_est;
+      x3y_est_dot = G3*pow(std::abs(ey_est),alpha_1)*sign_ey_est + G3*pow(std::abs(ey_est),alpha_2)*sign_ey_est;
       x3y_est = (integral_step)*(x3y_est_dot + x3y_est_dot_last)/2 + x3y_est;
       x3y_est_dot_last = x3y_est_dot;
       x2y_est_dot = x3y_est + G2*pow(std::abs(ey_est),(alpha_1+1)/2)*sign_ey_est + G2*pow(std::abs(ey_est),(alpha_2+1)/2)*sign_ey_est + f_xi(1) + gu_xi(1);
@@ -529,7 +529,7 @@ public:
           Ka_dot_last_x = Ka_dot_x;
       }
       else{
-          Ka_x = (1 / pow(std::abs(s_x),0.5)) * ((eta_x / sqrt_2) - (k2_x * std::abs(s_x))); //- (x3x_est*sign_sx)
+          Ka_x = (1 / pow(std::abs(s_x),0.5)) * ((eta_x / sqrt_2) - (x3x_est*sign_sx) - (k2_x * std::abs(s_x))); //- (x3x_est*sign_sx) 
       }
 
       if (conv_y == true){
@@ -551,7 +551,7 @@ public:
         Ka_dot_last_y = Ka_dot_y;
       }
       else{
-          Ka_y = (1 / pow(std::abs(s_y),0.5)) * ((eta_y / sqrt_2) - (k2_y * std::abs(s_y))); //- (x3y_est*sign_sy) 
+          Ka_y = (1 / pow(std::abs(s_y),0.5)) * ((eta_y / sqrt_2) - (x3y_est*sign_sy) - (k2_y * std::abs(s_y))); //- (x3y_est*sign_sy) 
       }
 
       ua_x = ((-Ka_x) * pow(std::abs(s_x),0.5) * sign_sx) - (k2_x*s_x);
