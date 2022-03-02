@@ -1,0 +1,14 @@
+<launch>
+
+    <include file="$(find vectornav)/launch/vectornav.launch" />
+
+    <include file="$(find sensors)/launch/tracking_control_fxteso_antsm.launch" />
+
+    <include file="$(find sensors)/launch/ardumotors.launch" />
+
+    <node pkg="sensors" type="pool_trajectory_2.py" name="pool_trajectory_2" />
+
+    <!--Launch rosbag to record topics -->
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_control_fxteso_antsmc/pool" />
+
+</launch>

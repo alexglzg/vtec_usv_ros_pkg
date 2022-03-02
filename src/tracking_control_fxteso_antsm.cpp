@@ -529,7 +529,7 @@ public:
           Ka_dot_last_x = Ka_dot_x;
       }
       else{
-          Ka_x = (1 / pow(std::abs(s_x),0.5)) * ((eta_x / sqrt_2) - (x3x_est*sign_sx) - (k2_x * std::abs(s_x)));
+          Ka_x = (1 / pow(std::abs(s_x),0.5)) * ((eta_x / sqrt_2) - (k2_x * std::abs(s_x))); //- (x3x_est*sign_sx)
       }
 
       if (conv_y == true){
@@ -551,7 +551,7 @@ public:
         Ka_dot_last_y = Ka_dot_y;
       }
       else{
-          Ka_y = (1 / pow(std::abs(s_y),0.5)) * ((eta_y / sqrt_2) - (x3y_est*sign_sy) - (k2_y * std::abs(s_y)));
+          Ka_y = (1 / pow(std::abs(s_y),0.5)) * ((eta_y / sqrt_2) - (k2_y * std::abs(s_y))); //- (x3y_est*sign_sy) 
       }
 
       ua_x = ((-Ka_x) * pow(std::abs(s_x),0.5) * sign_sx) - (k2_x*s_x);

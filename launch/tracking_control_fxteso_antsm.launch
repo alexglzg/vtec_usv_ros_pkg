@@ -1,0 +1,27 @@
+<launch>
+
+    <node name="tracking_control_fxteso_antsm" pkg="sensors" type="tracking_control_fxteso_antsm">
+    <param name = "k_x" value = "0.1" />
+	<param name = "k_y" value = "0.1" />
+	<param name = "kmin_x" value = "0.01" />
+	<param name = "kmin_y" value = "0.01" />
+	<param name = "k2_x" value = "0.01" />
+    <param name = "k2_y" value = "0.01" />
+	<param name = "mu_x" value = "0.05" />
+	<param name = "mu_y" value = "0.05" />
+    <param name = "beta_x" value = "1.0" />
+	<param name = "beta_y" value = "1.0" />
+    <param name = "gamma_x" value = "0.6" />
+	<param name = "gamma_y" value = "0.6" />
+    <param name = "kappa_x" value = "0.05" />
+	<param name = "kappa_y" value = "0.05" />
+    <param name = "tc_x" value = "3.0" />
+	<param name = "tc_y" value = "3.0" />
+	<param name = "G1" value = "9.0" />
+    <param name = "G2" value = "120.0" />
+	<param name = "G3" value = "150.0" />
+    <param name = "alpha_1" value = "0.5" />
+	<param name = "alpha_2" value = "4.0" />
+    </node>
+
+</launch>
