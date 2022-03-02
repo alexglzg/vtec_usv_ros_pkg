@@ -1,8 +1,8 @@
 <launch>
 
     <node name="tracking_control_antsmc" pkg="sensors" type="tracking_control_antsmc">
-    <param name = "k_x" value = "0.1" />
-	<param name = "k_y" value = "0.1" />
+    <param name = "k_x" value = "0.05" />
+	<param name = "k_y" value = "0.05" />
 	<param name = "kmin_x" value = "0.01" />
 	<param name = "kmin_y" value = "0.01" />
 	<param name = "k2_x" value = "0.01" />

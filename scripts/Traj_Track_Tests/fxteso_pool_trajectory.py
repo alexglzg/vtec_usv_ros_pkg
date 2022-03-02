@@ -65,7 +65,7 @@ def main():
     xdddot = xdddot['data']
     ydddot = sio.loadmat(dir_name + '/mat/' + trajectory + '/fxteso_pool_ydddot.mat')
     ydddot = ydddot['data']
-    time.sleep(5)
+    time.sleep(10)
     rospy.logwarn("Start")
     if t.testing:
         start_time = rospy.Time.now().secs

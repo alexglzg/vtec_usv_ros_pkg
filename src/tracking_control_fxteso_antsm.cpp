@@ -524,6 +524,9 @@ public:
           else{
               Ka_dot_x = kmin_x;
           } 
+          if (Ka_x <= 0){
+              Ka_x = kmin_x;
+          }
   
           Ka_x = (integral_step)*(Ka_dot_x + Ka_dot_last_x)/2 + Ka_x; //integral to get the x adaptative gain
           Ka_dot_last_x = Ka_dot_x;
@@ -545,6 +548,9 @@ public:
         }
         else{
             Ka_dot_y = kmin_y;
+        }
+        if (Ka_y <= 0){
+                Ka_y = kmin_y;
         }
 
         Ka_y = (integral_step)*(Ka_dot_y + Ka_dot_last_y)/2 + Ka_y; //integral to get the y adaptative gain
