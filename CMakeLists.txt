@@ -209,7 +209,6 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
 add_subdirectory(include/cpp libvncxx)
 add_executable(ins_2d src/ins_2d.cpp)
 add_executable(asmc src/asmc.cpp)
@@ -226,6 +225,7 @@ add_executable(tracking_control_antsmc src/tracking_control_antsmc.cpp)
 add_executable(tracking_control_sast src/tracking_control_sast.cpp)
 add_executable(tracking_control_ast src/tracking_control_ast.cpp)
 add_executable(tracking_control_pid src/tracking_control_pid.cpp)
+add_executable(tracking_control_fxteso_antsm src/tracking_control_fxteso_antsm.cpp)
 add_executable(finite_time_tracking_control_asmc src/finite_time_tracking_control_asmc.cpp)
 add_executable(asmc_speeds src/asmc_speeds.cpp)
 add_executable(dynamic_model_simulate src/dynamic_model_simulate.cpp)
@@ -259,6 +259,7 @@ target_link_libraries(tracking_control_antsmc ${catkin_LIBRARIES})
 target_link_libraries(tracking_control_sast ${catkin_LIBRARIES})
 target_link_libraries(tracking_control_ast ${catkin_LIBRARIES})
 target_link_libraries(tracking_control_pid ${catkin_LIBRARIES})
+target_link_libraries(tracking_control_fxteso_antsm ${catkin_LIBRARIES})
 target_link_libraries(finite_time_tracking_control_asmc ${catkin_LIBRARIES})
 target_link_libraries(tracking_ismc ${catkin_LIBRARIES})
 target_link_libraries(asmc_speeds ${catkin_LIBRARIES})

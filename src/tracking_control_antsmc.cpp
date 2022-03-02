@@ -345,10 +345,10 @@ public:
       lambda_e_xi_dot << (1.0/(beta_x * gamma_x)) * pow(std::abs(e_x_dot),(2 - gamma_x)) * sign_edx,
                        (1.0/(beta_y * gamma_y)) * pow(std::abs(e_y_dot),(2 - gamma_y)) * sign_edy;
 
-      g_xi << g_u*cos(psi), -g_r*sin(psi),
-           g_u*sin(psi), g_r*cos(psi);
+      g_xi << g_u*cos(psi), -g_r*l*sin(psi),
+           g_u*sin(psi), g_r*l*cos(psi);
 
-      f_1 << cos(psi), sin(psi),
+      f_1 << cos(psi), -sin(psi),
            sin(psi), cos(psi);
 
       f_2 << f_u - v*r - l*r*r,

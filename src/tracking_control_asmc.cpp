@@ -323,10 +323,10 @@ public:
       lambda_e_xi_dot << lambda_x * e_x,
                        lambda_y * e_y;
 
-      g_xi << g_u*cos(psi), -g_r*sin(psi),
-           g_u*sin(psi), g_r*cos(psi);
+      g_xi << g_u*cos(psi), -g_r*l*sin(psi),
+           g_u*sin(psi), g_r*l*cos(psi);
 
-      f_1 << cos(psi), sin(psi),
+      f_1 << cos(psi), -sin(psi),
            sin(psi), cos(psi);
 
       f_2 << f_u - v*r - l*r*r,
