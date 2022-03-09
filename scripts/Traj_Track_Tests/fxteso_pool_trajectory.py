@@ -9,7 +9,7 @@ import scipy.io as sio
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Float64, UInt8
 
-trajectory = rospy.get_param("fxteso_pool_trajectory/trajectory", 'fxteso_pool_trajectory')
+trajectory = rospy.get_param("fxteso_pool_trajectory/trajectory", 'fxteso_infinity')
 #Trajectory for second order controller
 
 class Test:

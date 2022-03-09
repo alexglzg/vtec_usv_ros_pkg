@@ -6,7 +6,11 @@
 
     <include file="$(find sensors)/launch/ardumotors.launch" />
 
-    <node pkg="sensors" type="fxteso_pool_trajectory.py" name="fxteso_pool_trajectory" />
+    <node name="fxteso_pool_trajectory" pkg="sensors" type="fxteso_pool_trajectory.py" >
+	<!--param name = "trajectory" value = "fxteso_infinity" /-->
+    <param name = "trajectory" value = "fxteso_circle" />
+    <!--param name = "trajectory" value = "fxteso_line" /-->
+    </node>
 
     <!--Launch rosbag to record topics -->
     <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_control_fxteso_antsmc/pool" />
