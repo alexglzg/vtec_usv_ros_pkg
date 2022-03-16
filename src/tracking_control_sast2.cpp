@@ -37,19 +37,27 @@ public:
   float y_d;
   float xdot_d;
   float ydot_d;
+  float xddot_d;
+  float yddot_d;
   float psi_d;
   float r_d;
+  float r_d_dot;
   float past_psi_d;
   float psi_d_dif;
+  float past_r_d;
 
   //Auxiliry variables
   float e_x;
   float e_y;
   float e_x_dot;
   float e_y_dot;
+  float xid_x_ddot;
+  float xid_y_ddot;
   float s_x;
   float s_y;
 
+  int sign_edx;
+  int sign_edy;
   int sign_x_sm;
   int sign_y_sm;
   int sign_sx;
@@ -114,6 +122,7 @@ public:
   Matrix2f g_xi;
   Vector2f lambda_e_xi_dot;
   Vector2f ua_xi;
+  Vector2f xid_ddot;
 
   std_msgs::Float64 right_thruster;
   std_msgs::Float64 left_thruster;
@@ -145,6 +154,7 @@ public:
     //ROS Subscribers
     desired_trajectory_sub = n.subscribe("/mission/trajectory", 1000, &AdaptiveSlidingModeControl::desiredTrajCallback, this);
     desired_trajectorydot_sub = n.subscribe("/mission/trajectory_derivative", 1000, &AdaptiveSlidingModeControl::desiredTrajDotCallback, this);
+    desired_trajectoryddot_sub = n.subscribe("/mission/trajectory_second_derivative", 1000, &AdaptiveSlidingModeControl::desiredTrajDDotCallback, this);
     ins_pose_sub = n.subscribe("/vectornav/ins_2d/NED_pose", 1000, &AdaptiveSlidingModeControl::insCallback, this);
     local_vel_sub = n.subscribe("/vectornav/ins_2d/local_vel", 1000, &AdaptiveSlidingModeControl::velocityCallback, this);
     flag_sub = n.subscribe("/arduino_br/ardumotors/flag", 1000, &AdaptiveSlidingModeControl::flagCallback, this);
@@ -172,6 +182,7 @@ public:
     arduino = 0;
     starting = 0;
     past_psi_d = 0;
+    past_r_d = 0;
     x2_x = 0;
     x2_y = 0;
     x2_dot_x = 0;
@@ -193,6 +204,12 @@ public:
     xdot_d = _pdotd -> x;
     ydot_d = _pdotd -> y;
     psi_d = std::atan2(ydot_d, xdot_d);
+  }
+
+  void desiredTrajDDotCallback(const geometry_msgs::Pose2D::ConstPtr& _pddotd)
+  {
+    xddot_d = _pddotd -> x;
+    yddot_d = _pddotd -> y;
   }
 
   void insCallback(const geometry_msgs::Pose2D::ConstPtr& _ins)
@@ -247,6 +264,12 @@ public:
       e_x_dot = xdot_d - l*sin(psi_d)*r_d - (u*cos(psi) - v*sin(psi) - l*sin(psi)*r);
       e_y_dot = ydot_d + l*cos(psi_d)*r_d - (u*sin(psi) + v*cos(psi) + l*cos(psi)*r);
       past_psi_d = psi_d;
+
+      r_d_dot = (r_d - past_r_d)/integral_step;
+      past_r_d = r_d;
+
+      xid_x_ddot = xddot_d - l*sin(psi_d)*r_d_dot - l*cos(psi_d)*r_d*r_d;
+      xid_y_ddot = yddot_d + l*cos(psi_d)*r_d_dot - l*sin(psi_d)*r_d*r_d;
 
       s_x = e_x_dot + lambda_x*e_x;
       s_y = e_y_dot + lambda_y*e_y;
@@ -307,10 +330,10 @@ public:
       lambda_e_xi_dot << lambda_x * e_x,
                        lambda_y * e_y;
 
-      g_xi << g_u*cos(psi), -g_r*sin(psi),
-           g_u*sin(psi), g_r*cos(psi);
+      g_xi << g_u*cos(psi), -g_r*l*sin(psi),
+           g_u*sin(psi), g_r*l*cos(psi);
 
-      f_1 << cos(psi), sin(psi),
+      f_1 << cos(psi), -sin(psi),
            sin(psi), cos(psi);
 
       f_2 << f_u - v*r - l*r*r,
@@ -318,7 +341,10 @@ public:
       
       f_xi << f_1 * f_2;
 
-      u_xi << g_xi.inverse()*(lambda_e_xi_dot - ua_xi - f_xi);
+      xid_ddot << xid_x_ddot,
+                xid_y_ddot;
+
+      u_xi << g_xi.inverse()*(xid_ddot + lambda_e_xi_dot - ua_xi - f_xi);
 
       Tx = u_xi(0); //surge force
       Tz = u_xi(1); //yaw rate moment
@@ -348,6 +374,9 @@ public:
         x2_dot_last_x = 0;
         x2_dot_last_y = 0;
         past_psi_d = 0;
+        past_r_d = 0;
+        xddot_d = 0;
+        yddot_d = 0;
       }
 
       port_t = (Tx / 2) + (Tz / B);
@@ -411,6 +440,7 @@ private:
 
   ros::Subscriber desired_trajectory_sub;
   ros::Subscriber desired_trajectorydot_sub;
+  ros::Subscriber desired_trajectoryddot_sub;
   ros::Subscriber ins_pose_sub;
   ros::Subscriber local_vel_sub;
   ros::Subscriber flag_sub;
