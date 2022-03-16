@@ -2,6 +2,6 @@
 
     <node pkg="sensors" type="ardumotors.py" name="ardumotors" />
 
-    <node pkg="rosserial_python" type="serial_node.py" name="serial_node" args = "/dev/ttyUSB1" />
+    <node pkg="rosserial_python" type="serial_node.py" name="serial_node" args = "/dev/ARDUINO" />
 
 </launch>

@@ -3,7 +3,7 @@
 
     <include file="$(find sensors)/launch/tracking_control_asmc.launch" />
 
-    <node pkg="sensors" type="heterogeneous_pool_infinity_trajectory.py" name="heterogeneous_pool_infinity_trajectory" />
+    <node pkg="sensors" type="pool_trajectory_2.py" name="pool_trajectory_2" />
 
     <include file="$(find sensors)/launch/usv_simulation.launch" />
 

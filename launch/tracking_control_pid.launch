@@ -1,0 +1,12 @@
+<launch>
+
+    <node name="tracking_control_pid" pkg="sensors" type="tracking_control_pid">
+    <param name = "kp_x" value = "5.0" />
+	<param name = "kp_y" value = "5.0" />
+	<param name = "kd_x" value = "2.0" />
+	<param name = "kd_y" value = "2.0" />
+	<param name = "ki_x" value = "0.2" />
+    <param name = "ki_y" value = "0.2" />
+    </node>
+
+</launch>
