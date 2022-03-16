@@ -131,6 +131,8 @@ public:
 
   std_msgs::Float64 x_gain;
   std_msgs::Float64 y_gain;
+  std_msgs::Float64 x_gain2;
+  std_msgs::Float64 y_gain2;
 
   std_msgs::Float64 x_error;
   std_msgs::Float64 y_error;
@@ -146,10 +148,12 @@ public:
     right_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/right_thruster", 1000);
     left_thruster_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/left_thruster", 1000);
     x_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/x_gain", 1000);
+    x_gain2_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/x_gain2", 1000);
     x_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/x_error", 1000);
     x_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/x_sigma", 1000);
     y_sigma_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/y_sigma", 1000);
     y_gain_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/y_gain", 1000);
+    y_gain2_pub = n.advertise<std_msgs::Float64>("/usv_control/asmc/y_gain2", 1000);
     y_error_pub = n.advertise<std_msgs::Float64>("/usv_control/controller/y_error", 1000);
     control_input_pub = n.advertise<geometry_msgs::Pose2D>("/usv_control/controller/control_input", 1000);
 
@@ -420,6 +424,8 @@ public:
 
       x_gain.data = Ka_x;
       y_gain.data = Ka_y;
+      x_gain2.data = k2_x;
+      y_gain2.data = k2_y;
 
       x_error.data = e_x;
       y_error.data = e_y;
@@ -434,9 +440,11 @@ public:
       left_thruster_pub.publish(left_thruster);
 
       x_gain_pub.publish(x_gain);
+      x_gain2_pub.publish(x_gain2);
       x_error_pub.publish(x_error);
       x_sigma_pub.publish(x_sigma);
       y_gain_pub.publish(y_gain);
+      y_gain2_pub.publish(y_gain2);
       y_error_pub.publish(y_error);
       y_sigma_pub.publish(y_sigma);
 
@@ -451,10 +459,12 @@ private:
   ros::Publisher left_thruster_pub;
   ros::Publisher control_input_pub;
   ros::Publisher x_gain_pub;
+  ros::Publisher x_gain2_pub;
   ros::Publisher x_error_pub;
   ros::Publisher x_sigma_pub;
   ros::Publisher y_sigma_pub;
   ros::Publisher y_gain_pub;
+  ros::Publisher y_gain2_pub;
   ros::Publisher y_error_pub;
 
   ros::Subscriber desired_trajectory_sub;
