@@ -367,6 +367,9 @@ public:
       
       f_xi << f_1 * f_2;
 
+      xid_ddot << xid_x_ddot,
+                xid_y_ddot;
+
       u_xi << g_xi.inverse()*(xid_ddot + lambda_e_xi_dot - ua_xi - f_xi);
 
       Tx = u_xi(0); //surge force
