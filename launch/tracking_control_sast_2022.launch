@@ -1,0 +1,12 @@
+<launch>
+
+    <node name="tracking_control_sast_2022" pkg="sensors" type="tracking_control_sast_2022" >
+	<param name = "kc_x" value = "1.0" />
+	<param name = "kc_y" value = "1.0" />
+	<param name = "gamma_x" value = "1.0" />
+	<param name = "gamma_y" value = "1.0" />
+    <param name = "lambda_x" value = "1.0" />
+	<param name = "lambda_y" value = "1.0" />
+    </node>
+
+</launch>
