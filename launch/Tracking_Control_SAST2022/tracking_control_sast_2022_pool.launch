@@ -10,6 +10,6 @@
     <node pkg="sensors" type="sast_pool_infinity_trajectory.py" name="sast_pool_infinity_trajectory" />
     
     <!--Launch rosbag to record topics -->
-    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_control_sast/pool_sast3" />
+    <node type="record" pkg="rosbag" name="recorder" args="record -a -o $(find sensors)/bags/tracking_control_sast/pool_sast2022" />
 
 </launch>
